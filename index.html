@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>危险游戏 - 关卡模式</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 主界面 -->
+    <div class="main-menu" id="mainMenu">
+        <div class="menu-content">
+            <h1>骰子游戏</h1>
+            <p class="game-description">选择你喜欢的骰子，开始挑战关卡吧！</p>
+            
+            <!-- 骰子选择 -->
+            <div class="dice-selection">
+                <h2>选择骰子</h2>
+                <div class="dice-options" id="diceOptions">
+                    <!-- 骰子选项将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 开始游戏按钮 -->
+            <button class="start-button" id="startButton">开始游戏</button>
+        </div>
+    </div>
+    
+    <!-- 游戏界面 -->
+    <div class="game-container" id="gameContainer" style="display: none;">
+        <!-- 蓝色牌桌背景 -->
+        <div class="table">
+            <!-- 返回主菜单按钮 -->
+            <button class="back-button" id="backButton">返回主菜单</button>
+            
+            <!-- 关卡信息显示 -->
+            <div class="level-info">
+                <div class="info-item">
+                    <span class="info-label">关卡:</span>
+                    <span class="info-value" id="currentLevel">1</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">投掷次数:</span>
+                    <span class="info-value" id="rollCount">0/3</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">当前总和:</span>
+                    <span class="info-value" id="currentSum">0</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">目标总和:</span>
+                    <span class="info-value" id="targetSum">8</span>
+                </div>
+            </div>
+            
+            <!-- 骰子容器 -->
+            <div class="dice-container">
+                <div class="dice" id="dice">
+                    <!-- 骰子的6个面 -->
+                    <div class="dice-face face-1">1</div>
+                    <div class="dice-face face-2">2</div>
+                    <div class="dice-face face-3">3</div>
+                    <div class="dice-face face-4">4</div>
+                    <div class="dice-face face-5">5</div>
+                    <div class="dice-face face-6">6</div>
+                </div>
+            </div>
+            
+            <!-- 掷骰子按钮 -->
+            <button class="roll-button" id="rollButton">掷骰子</button>
+        </div>
+    </div>
+    
+    <!-- 结算界面 -->
+    <div class="result-modal" id="resultModal">
+        <div class="modal-content">
+            <h2 id="resultTitle">关卡完成!</h2>
+            <p id="resultMessage">恭喜你完成了关卡目标!</p>
+            <div class="result-stats">
+                <p>关卡: <span id="resultLevel">1</span></p>
+                <p>最终总和: <span id="resultSum">0</span></p>
+                <p>目标总和: <span id="resultTarget">8</span></p>
+            </div>
+            <div class="modal-buttons">
+                <button id="nextLevelButton" class="modal-button">进入下一关</button>
+                <button id="restartButton" class="modal-button">重新开始</button>
+                <button id="backToFirstButton" class="modal-button">回到第一关</button>
+                <button id="backToMainButton" class="modal-button">返回主菜单</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 出千界面 -->
+    <div class="cheat-modal" id="cheatModal">
+        <div class="modal-content">
+            <h2>出千机会</h2>
+            <p>你可以修改骰子来提高下一关的胜率!</p>
+            
+            <!-- 骰子预览 -->
+            <div class="dice-preview" id="dicePreview">
+                <!-- 骰子预览将通过JavaScript动态生成 -->
+            </div>
+            
+            <!-- 出千选项 -->
+            <div class="cheat-selection">
+                <h3>修改选项</h3>
+                <div class="cheat-options" id="cheatOptions">
+                    <!-- 出千选项将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 修改历史 -->
+            <div class="cheat-history" id="cheatHistory">
+                <h3>修改历史</h3>
+                <div class="history-items" id="historyItems">
+                    <p class="no-history">暂无修改</p>
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button id="continueButton" class="modal-button">进入下一关</button>
+                <button id="skipCheatButton" class="modal-button">跳过修改</button>
+                <button id="resetDiceButton" class="modal-button">重置骰子</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 引入配置文件 -->
+    <script src="config/levelconfig.js"></script>
+    <script src="config/diceconfig.js"></script>
+    <script src="config/cheatconfig.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>

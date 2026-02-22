@@ -1,0 +1,761 @@
+/* 全局样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* 主界面 */
+.main-menu {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+}
+
+.menu-content {
+    background-color: #2c5aa0;
+    border-radius: 20px;
+    padding: 60px;
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    /* 牌桌纹理效果 */
+    background-image: linear-gradient(45deg, #2a5599 25%, transparent 25%),
+                      linear-gradient(-45deg, #2a5599 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #2a5599 75%),
+                      linear-gradient(-45deg, transparent 75%, #2a5599 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+.menu-content h1 {
+    color: #e6b141;
+    margin-bottom: 20px;
+    font-size: 36px;
+}
+
+.game-description {
+    color: white;
+    margin-bottom: 40px;
+    font-size: 18px;
+}
+
+/* 骰子选择 */
+.dice-selection {
+    margin-bottom: 40px;
+}
+
+.dice-selection h2 {
+    color: white;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+.dice-options {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.dice-option {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 20px 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    min-width: 150px;
+    min-height: 0;
+    height: auto;
+    position: relative;
+    overflow: visible;
+    z-index: 1;
+}
+
+.dice-option:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.dice-option.selected {
+    border-color: #e6b141;
+    background-color: rgba(230, 177, 65, 0.2);
+}
+
+/* 骰子图标 - 与关卡中一致的样式 */
+.dice-icon {
+    width: 80px;
+    height: 80px;
+    position: relative;
+    margin: 0 auto 15px;
+    transform-style: preserve-3d;
+    transform: rotateX(20deg) rotateY(20deg);
+    transition: transform 0.3s ease;
+}
+
+.dice-icon:hover {
+    transform: rotateX(0deg) rotateY(0deg);
+}
+
+/* 骰子面 - 与关卡中一致的样式 */
+.dice-icon .dice-face {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* 骰子各面位置 - 与关卡中一致的样式 */
+.dice-icon .face-1 { transform: translateZ(40px); }
+.dice-icon .face-2 { transform: rotateY(90deg) translateZ(40px); }
+.dice-icon .face-3 { transform: rotateY(180deg) translateZ(40px); }
+.dice-icon .face-4 { transform: rotateY(-90deg) translateZ(40px); }
+.dice-icon .face-5 { transform: rotateX(-90deg) translateZ(40px); }
+.dice-icon .face-6 { transform: rotateX(90deg) translateZ(40px); }
+
+/* 骰子名称 */
+.dice-option h3 {
+    color: #e6b141;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+/* 详细说明 - 默认隐藏 */
+.dice-option .dice-details {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: rgba(44, 90, 160, 0.95);
+    border-radius: 0 0 10px 10px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 100;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+/* 鼠标悬停时显示详细说明 */
+.dice-option:hover .dice-details {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    margin-top: 5px;
+}
+
+/* 详细说明内容 */
+.dice-description {
+    color: white;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.dice-probabilities {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* 开始游戏按钮 */
+.start-button {
+    background-color: #e6b141;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 18px 50px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(230, 177, 65, 0.4);
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+
+.start-button:hover {
+    background-color: #d4a032;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(230, 177, 65, 0.5);
+}
+
+.start-button:active {
+    transform: translateY(0);
+}
+
+/* 游戏容器 */
+.game-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 100vh;
+    background-color: #f0f0f0;
+}
+
+/* 蓝色牌桌 */
+.table {
+    background-color: #2c5aa0;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    padding: 60px;
+    text-align: center;
+    width: 500px;
+    min-height: 450px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    /* 牌桌纹理效果 */
+    background-image: linear-gradient(45deg, #2a5599 25%, transparent 25%),
+                      linear-gradient(-45deg, #2a5599 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #2a5599 75%),
+                      linear-gradient(-45deg, transparent 75%, #2a5599 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* 返回主菜单按钮 */
+.back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    border-radius: 15px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+/* 关卡信息显示 */
+.level-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.info-item {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-label {
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.info-value {
+    color: #e6b141;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* 骰子容器 */
+.dice-container {
+    perspective: 1000px;
+    margin-bottom: 40px;
+    position: relative;
+    display: inline-block;
+}
+
+/* 关卡中骰子悬停信息 */
+.dice-container .dice-info {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(44, 90, 160, 0.95);
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 100;
+    white-space: normal;
+    word-wrap: break-word;
+    min-width: 200px;
+    margin-top: 10px;
+}
+
+.dice-container:hover .dice-info {
+    opacity: 1;
+    visibility: visible;
+}
+
+.dice-container .dice-info h4 {
+    color: #e6b141;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.dice-container .dice-info .face-info {
+    color: white;
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.dice-container .dice-info .face-info .face-number {
+    font-weight: bold;
+}
+
+.dice-container .dice-info .face-info .face-probability {
+    color: #e6b141;
+}
+
+/* 骰子样式 */
+.dice {
+    width: 100px;
+    height: 100px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 骰子面通用样式 */
+.dice-face {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* 骰子各面位置 */
+.face-1 { transform: translateZ(50px); }
+.face-2 { transform: rotateY(90deg) translateZ(50px); }
+.face-3 { transform: rotateY(180deg) translateZ(50px); }
+.face-4 { transform: rotateY(-90deg) translateZ(50px); }
+.face-5 { transform: rotateX(-90deg) translateZ(50px); }
+.face-6 { transform: rotateX(90deg) translateZ(50px); }
+
+/* 掷骰子按钮 */
+.roll-button {
+    background-color: #e6b141;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 15px 40px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(230, 177, 65, 0.4);
+    transition: all 0.3s ease;
+}
+
+.roll-button:hover {
+    background-color: #d4a032;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(230, 177, 65, 0.5);
+}
+
+.roll-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(230, 177, 65, 0.4);
+}
+
+.roll-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* 结算界面 */
+.result-modal,
+.cheat-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.result-modal.show,
+.cheat-modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background-color: #2c5aa0;
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content h2 {
+    color: #e6b141;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.modal-content p {
+    color: white;
+    margin-bottom: 30px;
+    font-size: 16px;
+}
+
+.result-stats {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.result-stats p {
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.result-stats span {
+    color: #e6b141;
+    font-weight: bold;
+}
+
+/* 骰子预览 */
+.dice-preview {
+    margin-bottom: 30px;
+    text-align: center;
+    position: relative;
+    display: inline-block;
+}
+
+.dice-preview .dice {
+    margin: 0 auto;
+    cursor: pointer;
+}
+
+/* 骰子悬停信息 */
+.dice-preview .dice-info {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(44, 90, 160, 0.95);
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 100;
+    white-space: normal;
+    word-wrap: break-word;
+    min-width: 200px;
+    margin-top: 10px;
+}
+
+.dice-preview:hover .dice-info {
+    opacity: 1;
+    visibility: visible;
+}
+
+.dice-preview .dice-info h4 {
+    color: #e6b141;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.dice-preview .dice-info .face-info {
+    color: white;
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.dice-preview .dice-info .face-info .face-number {
+    font-weight: bold;
+}
+
+.dice-preview .dice-info .face-info .face-probability {
+    color: #e6b141;
+}
+
+/* 出千选项 */
+.cheat-selection {
+    margin-bottom: 30px;
+}
+
+.cheat-selection h3 {
+    color: white;
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+.cheat-options {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.cheat-option {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 20px 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    min-width: 150px;
+    min-height: 0;
+    height: auto;
+    position: relative;
+    overflow: visible;
+    z-index: 1;
+}
+
+.cheat-option:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cheat-option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.cheat-option .cheat-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.cheat-option h4 {
+    color: #e6b141;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+/* 购买按钮 */
+.cheat-option .buy-button {
+    background-color: #e6b141;
+    color: white;
+    border: none;
+    border-radius: 15px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cheat-option .buy-button:hover {
+    background-color: #d4a032;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(230, 177, 65, 0.4);
+}
+
+.cheat-option .buy-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* 详细说明 - 默认隐藏 */
+.cheat-option .cheat-details {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: rgba(44, 90, 160, 0.95);
+    border-radius: 0 0 10px 10px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 100;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+/* 鼠标悬停时显示详细说明 */
+.cheat-option:hover .cheat-details {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    margin-top: 5px;
+}
+
+/* 详细说明内容 */
+.cheat-description {
+    color: white;
+    font-size: 14px;
+    margin-bottom: 0;
+}
+
+/* 修改历史 */
+.cheat-history {
+    margin-bottom: 30px;
+}
+
+.cheat-history h3 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.history-items {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 10px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.history-item {
+    color: white;
+    font-size: 14px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.history-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.no-history {
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+    text-align: center;
+}
+
+.modal-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-button {
+    background-color: #e6b141;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-button:hover {
+    background-color: #d4a032;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(230, 177, 65, 0.4);
+}
+
+.modal-button:active {
+    transform: translateY(0);
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+    .menu-content {
+        padding: 40px 20px;
+    }
+    
+    .menu-content h1 {
+        font-size: 28px;
+    }
+    
+    .table {
+        width: 90%;
+        padding: 30px;
+        min-height: 400px;
+    }
+    
+    .level-info {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .dice {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .dice-face {
+        width: 80px;
+        height: 80px;
+        font-size: 20px;
+    }
+    
+    .face-1 { transform: translateZ(40px); }
+    .face-2 { transform: rotateY(90deg) translateZ(40px); }
+    .face-3 { transform: rotateY(180deg) translateZ(40px); }
+    .face-4 { transform: rotateY(-90deg) translateZ(40px); }
+    .face-5 { transform: rotateX(-90deg) translateZ(40px); }
+    .face-6 { transform: rotateX(90deg) translateZ(40px); }
+    
+    .modal-content {
+        padding: 30px;
+    }
+}

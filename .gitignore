@@ -1,0 +1,43 @@
+# 依赖文件
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 构建产物
+dist/
+build/
+
+# 环境变量文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+Thumbs.db
+.DS_Store
+
+# 服务器相关
+*.pid
+*.seed
+*.pid.lock
+
+# 日志文件
+logs
+*.log
+
+# 缓存文件
+.cache/
+tmp/
+temp/
