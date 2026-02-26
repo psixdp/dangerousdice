@@ -30,13 +30,13 @@ body {
     padding: 60px;
     text-align: center;
     width: 100%;
-    max-width: 600px;
+    max-width: 1000px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     /* 牌桌纹理效果 */
     background-image: linear-gradient(45deg, #2a5599 25%, transparent 25%),
-                      linear-gradient(-45deg, #2a5599 25%, transparent 25%),
-                      linear-gradient(45deg, transparent 75%, #2a5599 75%),
-                      linear-gradient(-45deg, transparent 75%, #2a5599 75%);
+        linear-gradient(-45deg, #2a5599 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #2a5599 75%),
+        linear-gradient(-45deg, transparent 75%, #2a5599 75%);
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
@@ -133,12 +133,29 @@ body {
 }
 
 /* 骰子各面位置 - 与关卡中一致的样式 */
-.dice-icon .face-1 { transform: translateZ(40px); }
-.dice-icon .face-2 { transform: rotateY(90deg) translateZ(40px); }
-.dice-icon .face-3 { transform: rotateY(180deg) translateZ(40px); }
-.dice-icon .face-4 { transform: rotateY(-90deg) translateZ(40px); }
-.dice-icon .face-5 { transform: rotateX(-90deg) translateZ(40px); }
-.dice-icon .face-6 { transform: rotateX(90deg) translateZ(40px); }
+.dice-icon .face-1 {
+    transform: translateZ(40px);
+}
+
+.dice-icon .face-2 {
+    transform: rotateY(90deg) translateZ(40px);
+}
+
+.dice-icon .face-3 {
+    transform: rotateY(180deg) translateZ(40px);
+}
+
+.dice-icon .face-4 {
+    transform: rotateY(-90deg) translateZ(40px);
+}
+
+.dice-icon .face-5 {
+    transform: rotateX(-90deg) translateZ(40px);
+}
+
+.dice-icon .face-6 {
+    transform: rotateX(90deg) translateZ(40px);
+}
 
 /* 骰子名称 */
 .dice-option h3 {
@@ -227,7 +244,7 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     padding: 60px;
     text-align: center;
-    width: 500px;
+    width: 1000px;
     min-height: 450px;
     display: flex;
     flex-direction: column;
@@ -235,9 +252,9 @@ body {
     align-items: center;
     /* 牌桌纹理效果 */
     background-image: linear-gradient(45deg, #2a5599 25%, transparent 25%),
-                      linear-gradient(-45deg, #2a5599 25%, transparent 25%),
-                      linear-gradient(45deg, transparent 75%, #2a5599 75%),
-                      linear-gradient(-45deg, transparent 75%, #2a5599 75%);
+        linear-gradient(-45deg, #2a5599 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #2a5599 75%),
+        linear-gradient(-45deg, transparent 75%, #2a5599 75%);
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
@@ -293,12 +310,111 @@ body {
     font-size: 16px;
 }
 
+/* 骰子选择（关卡内） */
+.dice-selection-level {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.dice-selection-level h3 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.dice-count-options {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.dice-count-option {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.dice-count-option:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.dice-count-option.selected {
+    border-color: #e6b141;
+    background-color: rgba(230, 177, 65, 0.2);
+}
+
 /* 骰子容器 */
 .dice-container {
     perspective: 1000px;
     margin-bottom: 40px;
     position: relative;
-    display: inline-block;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.dice-container .dice {
+    margin: 0;
+}
+
+/* 消耗品显示 */
+.consumables {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.consumables h3 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.consumable-items {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.consumable-item {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    min-width: 100px;
+}
+
+.consumable-item:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.consumable-item .consumable-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.consumable-item h4 {
+    color: #e6b141;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.consumable-item p {
+    color: white;
+    font-size: 12px;
+    margin-bottom: 0;
 }
 
 /* 关卡中骰子悬停信息 */
@@ -374,12 +490,29 @@ body {
 }
 
 /* 骰子各面位置 */
-.face-1 { transform: translateZ(50px); }
-.face-2 { transform: rotateY(90deg) translateZ(50px); }
-.face-3 { transform: rotateY(180deg) translateZ(50px); }
-.face-4 { transform: rotateY(-90deg) translateZ(50px); }
-.face-5 { transform: rotateX(-90deg) translateZ(50px); }
-.face-6 { transform: rotateX(90deg) translateZ(50px); }
+.face-1 {
+    transform: translateZ(50px);
+}
+
+.face-2 {
+    transform: rotateY(90deg) translateZ(50px);
+}
+
+.face-3 {
+    transform: rotateY(180deg) translateZ(50px);
+}
+
+.face-4 {
+    transform: rotateY(-90deg) translateZ(50px);
+}
+
+.face-5 {
+    transform: rotateX(-90deg) translateZ(50px);
+}
+
+.face-6 {
+    transform: rotateX(90deg) translateZ(50px);
+}
 
 /* 掷骰子按钮 */
 .roll-button {
@@ -438,7 +571,7 @@ body {
     padding: 40px;
     text-align: center;
     width: 90%;
-    max-width: 400px;
+    max-width: 1000px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
@@ -452,6 +585,22 @@ body {
     color: white;
     margin-bottom: 30px;
     font-size: 16px;
+}
+
+/* 出千界面积分显示 */
+.cheat-score {
+    background-color: rgba(230, 177, 65, 0.2);
+    border: 1px solid #e6b141;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.cheat-score span {
+    color: #e6b141;
+    font-weight: bold;
+    font-size: 18px;
 }
 
 .result-stats {
@@ -542,13 +691,23 @@ body {
     font-size: 18px;
 }
 
+.cheat-section {
+    margin-bottom: 30px;
+}
+
+.cheat-section h3 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
 .cheat-options {
     display: flex;
     flex-direction: row;
-    gap: 20px;
+    gap: 15px;
     justify-content: center;
     flex-wrap: wrap;
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
 }
 
@@ -556,11 +715,11 @@ body {
     background-color: rgba(255, 255, 255, 0.1);
     border: 2px solid transparent;
     border-radius: 10px;
-    padding: 20px 15px;
+    padding: 15px 10px;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
-    min-width: 150px;
+    min-width: 120px;
     min-height: 0;
     height: auto;
     position: relative;
@@ -580,14 +739,15 @@ body {
 }
 
 .cheat-option .cheat-icon {
-    font-size: 24px;
-    margin-bottom: 10px;
+    font-size: 20px;
+    margin-bottom: 8px;
+    color: #e6b141;
 }
 
 .cheat-option h4 {
     color: #e6b141;
-    margin-bottom: 15px;
-    font-size: 14px;
+    margin-bottom: 10px;
+    font-size: 12px;
 }
 
 /* 购买按钮 */
@@ -596,11 +756,15 @@ body {
     color: white;
     border: none;
     border-radius: 15px;
-    padding: 8px 16px;
-    font-size: 12px;
+    padding: 6px 12px;
+    font-size: 10px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
+}
+
+.cheat-option .cheat-details {
+    font-size: 11px;
 }
 
 .cheat-option .buy-button:hover {
@@ -717,45 +881,82 @@ body {
 }
 
 /* 响应式设计 */
+@media (max-width: 1200px) {
+    .menu-content {
+        max-width: 800px;
+        padding: 40px 30px;
+    }
+
+    .table {
+        width: 90%;
+        max-width: 800px;
+        padding: 40px;
+    }
+
+    .modal-content {
+        max-width: 800px;
+        padding: 30px;
+    }
+}
+
 @media (max-width: 600px) {
     .menu-content {
-        padding: 40px 20px;
+        max-width: 90%;
+        padding: 30px 20px;
     }
-    
+
     .menu-content h1 {
         font-size: 28px;
     }
-    
+
     .table {
-        width: 90%;
-        padding: 30px;
+        width: 95%;
+        padding: 20px;
         min-height: 400px;
     }
-    
+
     .level-info {
         grid-template-columns: 1fr;
         gap: 10px;
     }
-    
+
     .dice {
         width: 80px;
         height: 80px;
     }
-    
+
     .dice-face {
         width: 80px;
         height: 80px;
         font-size: 20px;
     }
-    
-    .face-1 { transform: translateZ(40px); }
-    .face-2 { transform: rotateY(90deg) translateZ(40px); }
-    .face-3 { transform: rotateY(180deg) translateZ(40px); }
-    .face-4 { transform: rotateY(-90deg) translateZ(40px); }
-    .face-5 { transform: rotateX(-90deg) translateZ(40px); }
-    .face-6 { transform: rotateX(90deg) translateZ(40px); }
-    
+
+    .face-1 {
+        transform: translateZ(40px);
+    }
+
+    .face-2 {
+        transform: rotateY(90deg) translateZ(40px);
+    }
+
+    .face-3 {
+        transform: rotateY(180deg) translateZ(40px);
+    }
+
+    .face-4 {
+        transform: rotateY(-90deg) translateZ(40px);
+    }
+
+    .face-5 {
+        transform: rotateX(-90deg) translateZ(40px);
+    }
+
+    .face-6 {
+        transform: rotateX(90deg) translateZ(40px);
+    }
+
     .modal-content {
-        padding: 30px;
+        max-width: 95%;
+        padding: 20px;
     }
 }
