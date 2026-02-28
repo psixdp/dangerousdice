@@ -14,11 +14,17 @@ window.addEventListener('DOMContentLoaded', function() {
     const startButton = document.getElementById('startButton');
     const backButton = document.getElementById('backButton');
     const backToMainButton = document.getElementById('backToMainButton');
-    const dice = document.getElementById('dice');
     const rollButton = document.getElementById('rollButton');
     const resultModal = document.getElementById('resultModal');
     const nextLevelButton = document.getElementById('nextLevelButton');
     const backToFirstButton = document.getElementById('backToFirstButton');
+    
+    // 获取所有骰子元素
+    const diceElements = [
+        document.getElementById('dice1'),
+        document.getElementById('dice2'),
+        document.getElementById('dice3')
+    ];
     
     // 出千界面DOM元素
     const cheatModal = document.getElementById('cheatModal');
@@ -49,7 +55,7 @@ window.addEventListener('DOMContentLoaded', function() {
     console.log('startButton:', startButton);
     console.log('backButton:', backButton);
     console.log('backToMainButton:', backToMainButton);
-    console.log('dice:', dice);
+    console.log('diceElements:', diceElements);
     console.log('rollButton:', rollButton);
     console.log('resultModal:', resultModal);
     console.log('nextLevelButton:', nextLevelButton);
@@ -62,12 +68,19 @@ window.addEventListener('DOMContentLoaded', function() {
     // 骰子各面对应的旋转角度
     const diceFaces = {
         1: { x: 0, y: 0 },
-        2: { x: 0, y: 90 },
-        3: { x: 0, y: 180 },
-        4: { x: 0, y: -90 },
-        5: { x: 90, y: 0 },
-        6: { x: -90, y: 0 }
+        2: { x: 0, y: -90 },
+        3: { x: 0, y: -180 },
+        4: { x: 0, y: 90 },
+        5: { x: -90, y: 0 },
+        6: { x: 90, y: 0 }
     };
+    
+    // 记录每个骰子的当前累计旋转角度，防止回旋
+    let currentRotations = [
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 }
+    ];
     
     // 游戏状态
     let gameState = {
@@ -91,8 +104,8 @@ window.addEventListener('DOMContentLoaded', function() {
     const levelConfig = window.levelConfig || [];
     console.log('关卡配置:', levelConfig);
     
-    // 获取骰子配置（暂时使用空数组，在generateDiceOptions函数中会重新获取）
-    let diceConfig = [];
+    // 获取骰子配置
+    let diceConfig = window.diceConfig || [];
     console.log('初始骰子配置:', diceConfig);
     
     // 获取出千配置
@@ -110,16 +123,6 @@ window.addEventListener('DOMContentLoaded', function() {
     function getCurrentLevelConfig() {
         const config = levelConfig.find(level => level.level === gameState.currentLevel) || levelConfig[0];
         console.log('当前关卡配置:', config);
-        return config;
-    }
-    
-    /**
-     * 获取当前选中的骰子配置
-     * @returns {Object} 当前骰子配置
-     */
-    function getCurrentDiceConfig() {
-        const config = diceConfig.find(dice => dice.id === gameState.selectedDice) || diceConfig[0];
-        console.log('当前骰子配置:', config);
         return config;
     }
     
@@ -218,11 +221,11 @@ window.addEventListener('DOMContentLoaded', function() {
      * 更新关卡信息显示
      */
     function updateLevelInfo() {
-        const levelConfig = getCurrentLevelConfig();
+        const currentLevelData = getCurrentLevelConfig();
         if (currentLevelEl) currentLevelEl.textContent = gameState.currentLevel;
-        if (rollCountEl) rollCountEl.textContent = `${gameState.currentRolls}/${levelConfig.maxRolls}`;
+        if (rollCountEl) rollCountEl.textContent = `${gameState.currentRolls}/${currentLevelData.maxRolls}`;
         if (currentSumEl) currentSumEl.textContent = gameState.currentSum;
-        if (targetSumEl) targetSumEl.textContent = levelConfig.targetSum;
+        if (targetSumEl) targetSumEl.textContent = currentLevelData.targetSum;
         // 更新积分显示
         const currentScoreEl = document.getElementById('currentScore');
         if (currentScoreEl) currentScoreEl.textContent = gameState.currentScore;
@@ -325,119 +328,28 @@ window.addEventListener('DOMContentLoaded', function() {
         console.log('========== 开始生成骰子选择选项 ==========');
         
         // 重新获取diceOptions元素，确保DOM已经加载完成
-        console.log('获取 diceOptions 元素');
-        const diceOptions = document.getElementById('diceOptions');
-        console.log('diceOptions 元素:', diceOptions);
-        
-        if (!diceOptions) {
+        const diceOptionsEl = document.getElementById('diceOptions');
+        if (!diceOptionsEl) {
             console.error('无法获取diceOptions元素');
             return;
         }
         
-        console.log('清空 diceOptions 内容');
-        diceOptions.innerHTML = '';
+        diceOptionsEl.innerHTML = '';
         
-        // 直接定义初始骰子配置，确保骰子选项能够显示
-        console.log('定义初始骰子配置');
-        const initialDiceConfig = [
-            {
-                id: 'standard6',
-                type: 'initial',
-                name: '标准六面骰',
-                description: '每个面出现的概率均等',
-                color: '#ffffff',
-                borderColor: '#333333',
-                dotColor: '#333333',
-                faces: [1, 2, 3, 4, 5, 6],
-                weights: [1, 1, 1, 1, 1, 1]
-            },
-            {
-                id: 'standard8',
-                type: 'initial',
-                name: '标准八面骰',
-                description: '每个面出现的概率均等',
-                color: '#ffffff',
-                borderColor: '#333333',
-                dotColor: '#333333',
-                faces: [1, 2, 3, 4, 5, 6, 7, 8],
-                weights: [1, 1, 1, 1, 1, 1, 1, 1]
-            },
-            {
-                id: 'loaded6',
-                type: 'initial',
-                name: '灌铅六面骰',
-                description: '数字1和6出现的概率更高',
-                color: '#ffcccc',
-                borderColor: '#cc0000',
-                dotColor: '#cc0000',
-                faces: [1, 2, 3, 4, 5, 6],
-                weights: [3, 1, 1, 1, 1, 3]
-            },
-            // 额外的骰子，用于出千界面购买
-            {
-                id: 'lucky7',
-                type: 'extra',
-                name: '幸运七面骰',
-                description: '包含幸运数字7，每个面出现概率均等',
-                color: '#ffd700',
-                borderColor: '#cc8400',
-                dotColor: '#cc8400',
-                faces: [1, 2, 3, 4, 5, 6, 7],
-                weights: [1, 1, 1, 1, 1, 1, 1],
-                cost: 50
-            },
-            {
-                id: 'multiplier',
-                type: 'extra',
-                name: '倍率骰子',
-                description: '可以为其他骰子的结果提供倍率',
-                color: '#90ee90',
-                borderColor: '#228b22',
-                dotColor: '#228b22',
-                faces: [1, 2, 3, 4],
-                weights: [1, 1, 1, 1],
-                cost: 80
-            },
-            {
-                id: 'blank',
-                type: 'extra',
-                name: '空白骰子',
-                description: '会复制其他骰子的最大值',
-                color: '#e0e0e0',
-                borderColor: '#666666',
-                dotColor: '#666666',
-                faces: [0, 0, 0, 0, 0, 0],
-                weights: [1, 1, 1, 1, 1, 1],
-                cost: 100
-            }
-        ];
+        // 使用来自 config/diceconfig.js 的 diceConfig
+        const initialDiceOptions = window.diceConfig.filter(d => d.type === 'initial');
+        console.log('初始骰子配置:', initialDiceOptions);
         
-        console.log('初始骰子配置:', initialDiceConfig);
-        
-        // 更新全局diceConfig变量，确保其他函数也能使用这些骰子配置
-        console.log('更新全局骰子配置');
-        window.diceConfig = initialDiceConfig;
-        console.log('更新 window.diceConfig 完成:', window.diceConfig);
-        
-        diceConfig = initialDiceConfig;
-        console.log('更新 diceConfig 完成:', diceConfig);
-        
-        console.log('开始遍历初始骰子配置');
-        initialDiceConfig.forEach((dice, index) => {
+        initialDiceOptions.forEach((dice, index) => {
             console.log(`处理第 ${index + 1} 个骰子:`, dice.name);
             
             const diceOption = document.createElement('div');
-            console.log('创建骰子选项元素:', diceOption);
-            
             diceOption.className = `dice-option ${gameState.selectedDice === dice.id ? 'selected' : ''}`;
             diceOption.dataset.diceId = dice.id;
-            console.log('设置骰子选项属性:', { className: diceOption.className, dataset: diceOption.dataset });
             
             // 生成概率显示文本（归一化权重）
-            console.log('生成概率显示文本');
             let probabilitiesText = '';
             const normalizedProbabilities = normalizeWeights(dice.weights);
-            console.log('归一化后的概率:', normalizedProbabilities);
             
             dice.faces.forEach((face, faceIndex) => {
                 probabilitiesText += `${face}: ${(normalizedProbabilities[faceIndex] * 100).toFixed(1)}%`;
@@ -445,13 +357,10 @@ window.addEventListener('DOMContentLoaded', function() {
                     probabilitiesText += ', ';
                 }
             });
-            console.log('概率显示文本:', probabilitiesText);
             
             // 生成骰子图标HTML - 与关卡中一致的样式
-            console.log('生成骰子图标HTML');
             const diceIconHTML = `
                 <div class="dice-icon">
-                    <!-- 骰子的6个面 - 与关卡中一致的结构 -->
                     <div class="dice-face face-1" style="background-color: ${dice.color}; border-color: ${dice.borderColor}; color: ${dice.dotColor};">1</div>
                     <div class="dice-face face-2" style="background-color: ${dice.color}; border-color: ${dice.borderColor}; color: ${dice.dotColor};">2</div>
                     <div class="dice-face face-3" style="background-color: ${dice.color}; border-color: ${dice.borderColor}; color: ${dice.dotColor};">3</div>
@@ -460,9 +369,7 @@ window.addEventListener('DOMContentLoaded', function() {
                     <div class="dice-face face-6" style="background-color: ${dice.color}; border-color: ${dice.borderColor}; color: ${dice.dotColor};">6</div>
                 </div>
             `;
-            console.log('骰子图标HTML:', diceIconHTML);
             
-            console.log('设置骰子选项HTML内容');
             diceOption.innerHTML = `
                 ${diceIconHTML}
                 <h3>${dice.name}</h3>
@@ -471,12 +378,6 @@ window.addEventListener('DOMContentLoaded', function() {
                     <div class="dice-probabilities">概率: ${probabilitiesText}</div>
                 </div>
             `;
-            console.log('骰子选项HTML内容设置完成');
-            
-            // 让骰子选项的高度根据内容自动调整
-            diceOption.style.height = 'auto';
-            diceOption.style.minHeight = '0';
-            console.log('设置骰子选项样式');
             
             diceOption.addEventListener('click', function() {
                 // 移除其他选项的选中状态
@@ -491,14 +392,11 @@ window.addEventListener('DOMContentLoaded', function() {
                 gameState.selectedDice = this.dataset.diceId;
                 console.log('选择骰子:', gameState.selectedDice);
             });
-            console.log('添加骰子选项点击事件监听器');
             
-            diceOptions.appendChild(diceOption);
-            console.log('将骰子选项添加到 diceOptions 容器');
+            diceOptionsEl.appendChild(diceOption);
         });
         
         console.log('生成骰子选择选项完成');
-        console.log('当前 diceOptions 内容:', diceOptions.innerHTML);
         console.log('========== 生成骰子选择选项完成 ==========');
     }
     
@@ -966,24 +864,17 @@ window.addEventListener('DOMContentLoaded', function() {
         // 准备投掷的骰子
         const diceToRoll = gameState.diceList.slice(0, gameState.diceCount);
         const diceResults = [];
-        const diceElements = [];
         
-        // 获取骰子元素
-        for (let i = 1; i <= gameState.diceCount; i++) {
-            const diceEl = document.getElementById(`dice${i}`);
+        // 显示需要的骰子，隐藏多余的
+        diceElements.forEach((diceEl, index) => {
             if (diceEl) {
-                diceEl.style.display = 'block';
-                diceElements.push(diceEl);
+                if (index < gameState.diceCount) {
+                    diceEl.style.display = 'block';
+                } else {
+                    diceEl.style.display = 'none';
+                }
             }
-        }
-        
-        // 隐藏多余的骰子
-        for (let i = gameState.diceCount + 1; i <= 3; i++) {
-            const diceEl = document.getElementById(`dice${i}`);
-            if (diceEl) {
-                diceEl.style.display = 'none';
-            }
-        }
+        });
         
         // 为每个骰子生成随机点数并应用动画
         diceToRoll.forEach((diceConfig, index) => {
@@ -992,18 +883,18 @@ window.addEventListener('DOMContentLoaded', function() {
             
             // 应用旋转动画
             if (diceElements[index]) {
-                // 随机旋转动画
-                const rotations = 3 + Math.random() * 2; // 3-5圈
-                const totalRotationX = (Math.random() * 360) + (rotations * 360);
-                const totalRotationY = (Math.random() * 360) + (rotations * 360);
-                diceElements[index].style.transform = `rotateX(${totalRotationX}deg) rotateY(${totalRotationY}deg)`;
+                const faceRotation = diceFaces[randomNumber] || diceFaces[1];
                 
-                // 动画结束后，设置为对应点数的正确角度
-                setTimeout(() => {
-                    // 获取对应点数的正确旋转角度
-                    const faceRotation = diceFaces[randomNumber] || diceFaces[1];
-                    diceElements[index].style.transform = `rotateX(${faceRotation.x}deg) rotateY(${faceRotation.y}deg)`;
-                }, 1000); // 与CSS中的transition时间对应
+                // 增加随机的大圈数
+                const extraRotations = 5 + Math.floor(Math.random() * 5); // 5-10圈
+                
+                // 累计目标角度，确保骰子始终向前旋转
+                currentRotations[index].x += (extraRotations * 360) + faceRotation.x;
+                currentRotations[index].y += (extraRotations * 360) + faceRotation.y;
+                
+                // 设置单一的、平滑的过渡效果
+                diceElements[index].style.transition = 'transform 2s cubic-bezier(0.15, 0, 0.15, 1)';
+                diceElements[index].style.transform = `rotateX(${currentRotations[index].x}deg) rotateY(${currentRotations[index].y}deg)`;
             }
         });
         
@@ -1020,41 +911,29 @@ window.addEventListener('DOMContentLoaded', function() {
         // 更新关卡信息显示
         updateLevelInfo();
         
-        // 检查是否已经达到目标点数
-        const newLevelConfig = getCurrentLevelConfig();
-        if (gameState.currentSum > newLevelConfig.targetSum) {
-            console.log('已经达到目标点数，不需要继续投掷');
-            // 直接检查关卡完成情况，这样剩余次数会参与积分计算
-            setTimeout(() => {
-                gameState.isRolling = false;
-                checkLevelCompletion();
-            }, 1000); // 与CSS中的transition时间对应
-            return;
-        }
-        
-        // 动画结束后检查是否完成关卡
+        // 动画结束后检查是否完成关卡 (2秒动画时间)
         setTimeout(() => {
             gameState.isRolling = false;
             console.log('动画结束，检查是否完成关卡');
             
-            // 检查是否达到最大投掷次数
-            const timeoutLevelConfig = getCurrentLevelConfig();
-            if (gameState.currentRolls >= timeoutLevelConfig.maxRolls) {
+            // 检查是否已经达到或超过目标点数
+            const newLevelConfig = getCurrentLevelConfig();
+            if (gameState.currentSum >= newLevelConfig.targetSum || gameState.currentRolls >= newLevelConfig.maxRolls) {
                 checkLevelCompletion();
             } else {
                 if (rollButton) rollButton.disabled = false;
                 console.log('继续投掷，启用按钮');
             }
-        }, 1000); // 与CSS中的transition时间对应
+        }, 2000); 
     }
     
     /**
      * 检查关卡完成情况
      */
     function checkLevelCompletion() {
-        const levelConfig = getCurrentLevelConfig();
-        const isLevelComplete = gameState.currentSum > levelConfig.targetSum;
-        console.log('检查关卡完成情况:', { isLevelComplete, currentSum: gameState.currentSum, targetSum: levelConfig.targetSum });
+        const currentLevelData = getCurrentLevelConfig();
+        const isLevelComplete = gameState.currentSum >= currentLevelData.targetSum;
+        console.log('检查关卡完成情况:', { isLevelComplete, currentSum: gameState.currentSum, targetSum: currentLevelData.targetSum });
         
         // 禁用掷骰子按钮
         if (rollButton) rollButton.disabled = true;
@@ -1066,15 +945,15 @@ window.addEventListener('DOMContentLoaded', function() {
         // 如果关卡完成，添加积分奖励并进入出千界面
         if (isLevelComplete) {
             // 计算积分奖励：基础胜利积分 + 剩余投掷次数 * 2
-            const basePoints = levelConfig.scoreRule?.basePoints || 10;
-            const remainingRolls = levelConfig.maxRolls - gameState.currentRolls;
-            const bonusPoints = remainingRolls * (levelConfig.scoreRule?.bonusPointsPerRoll || 2);
+            const basePoints = currentLevelData.scoreRule?.basePoints || 10;
+            const remainingRolls = Math.max(0, currentLevelData.maxRolls - gameState.currentRolls);
+            const bonusPoints = remainingRolls * (currentLevelData.scoreRule?.bonusPointsPerRoll || 2);
             const scoreReward = basePoints + bonusPoints;
             
             gameState.currentScore += scoreReward;
             updateLevelInfo();
             console.log('关卡完成，获得积分奖励:', scoreReward, '当前积分:', gameState.currentScore);
-            console.log('积分计算：基础分', basePoints, '+ 剩余投掷次数', remainingRolls, '*', levelConfig.scoreRule?.bonusPointsPerRoll || 2, '=', bonusPoints);
+            console.log('积分计算：基础分', basePoints, '+ 剩余投掷次数', remainingRolls, '*', currentLevelData.scoreRule?.bonusPointsPerRoll || 2, '=', bonusPoints);
             
             console.log('关卡完成，进入出千界面');
             showCheatInterface();
@@ -1094,7 +973,7 @@ window.addEventListener('DOMContentLoaded', function() {
      * @param {boolean} isLevelComplete 是否完成关卡
      */
     function updateResultModal(isLevelComplete) {
-        const levelConfig = getCurrentLevelConfig();
+        const currentLevelData = getCurrentLevelConfig();
         
         if (resultTitleEl && resultMessageEl) {
             if (isLevelComplete) {
@@ -1110,7 +989,7 @@ window.addEventListener('DOMContentLoaded', function() {
         
         if (resultLevelEl) resultLevelEl.textContent = gameState.currentLevel;
         if (resultSumEl) resultSumEl.textContent = gameState.currentSum;
-        if (resultTargetEl) resultTargetEl.textContent = levelConfig.targetSum;
+        if (resultTargetEl) resultTargetEl.textContent = currentLevelData.targetSum;
         
         // 添加轮次信息和修改历史
         const resultModalContent = document.querySelector('.result-modal .modal-content');
@@ -1135,7 +1014,7 @@ window.addEventListener('DOMContentLoaded', function() {
             // 更新轮次和历史信息
             let roundHistoryHTML = `
                 <h4 style="color: #e6b141; margin-bottom: 10px; font-size: 16px;">关卡信息</h4>
-                <p style="color: white; font-size: 14px; margin-bottom: 10px;">当前轮次: ${gameState.currentRolls}/${levelConfig.maxRolls}</p>
+                <p style="color: white; font-size: 14px; margin-bottom: 10px;">当前轮次: ${gameState.currentRolls}/${currentLevelData.maxRolls}</p>
                 <h4 style="color: #e6b141; margin-bottom: 10px; font-size: 16px;">修改历史</h4>
             `;
             
@@ -1152,7 +1031,7 @@ window.addEventListener('DOMContentLoaded', function() {
             roundHistorySection.innerHTML = roundHistoryHTML;
         }
         
-        console.log('更新结算界面:', { isLevelComplete, level: gameState.currentLevel, sum: gameState.currentSum, target: levelConfig.targetSum });
+        console.log('更新结算界面:', { isLevelComplete, level: gameState.currentLevel, sum: gameState.currentSum, target: currentLevelData.targetSum });
     }
     
     /**
@@ -1238,7 +1117,8 @@ window.addEventListener('DOMContentLoaded', function() {
      * 更新关卡中骰子的悬停信息
      */
     function updateGameDiceInfo() {
-        if (!dice || !dice.parentElement) return;
+        const diceContainer = document.getElementById('diceContainer');
+        if (!diceContainer) return;
         
         const currentDice = getCurrentDiceConfig();
         
@@ -1247,13 +1127,13 @@ window.addEventListener('DOMContentLoaded', function() {
         const probabilities = currentDice.weights.map(weight => (weight / totalWeight * 100).toFixed(1));
         
         // 检查是否已经存在骰子信息元素
-        let diceInfo = dice.parentElement.querySelector('.dice-info');
+        let diceInfo = diceContainer.querySelector('.dice-info');
         
         if (!diceInfo) {
             // 创建骰子信息元素
             diceInfo = document.createElement('div');
             diceInfo.className = 'dice-info';
-            dice.parentElement.appendChild(diceInfo);
+            diceContainer.appendChild(diceInfo);
         }
         
         // 生成骰子信息HTML
@@ -1284,6 +1164,7 @@ window.addEventListener('DOMContentLoaded', function() {
         gameState.currentSum = 0;
         gameState.isRolling = false;
         gameState.isGameOver = false;
+        gameState.hasRolled = false; // 重置投掷标记，允许在新关卡开始时更换骰子数量
         gameState.usedCheats = []; // 重置出千选项的购买次数
         // 保留骰子修改和出千历史
         console.log('重置游戏状态:', gameState);
@@ -1299,10 +1180,12 @@ window.addEventListener('DOMContentLoaded', function() {
         console.log('启用掷骰子按钮');
         
         // 重置骰子位置
-        if (dice) {
-            dice.style.transform = `rotateX(${diceFaces[1].x}deg) rotateY(${diceFaces[1].y}deg)`;
-            console.log('重置骰子位置');
-        }
+        diceElements.forEach(diceEl => {
+            if (diceEl) {
+                diceEl.style.transform = `rotateX(${diceFaces[1].x}deg) rotateY(${diceFaces[1].y}deg)`;
+            }
+        });
+        console.log('重置所有骰子位置');
     }
     
     /**
