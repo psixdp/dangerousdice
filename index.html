@@ -1,196 +1,113 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>千王之王</title>
+    <title>千王之王 - 骰子 Roguelite</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
-    <!-- 主界面 -->
-    <div class="main-menu" id="mainMenu">
-        <div class="menu-content">
-            <h1>骰子游戏</h1>
-            <p class="game-description">选择你喜欢的骰子，开始挑战！</p>
-
-            <!-- 骰子选择 -->
-            <div class="dice-selection">
-                <h2>选择骰子</h2>
-                <div class="dice-options" id="diceOptions">
-                    <!-- 骰子选项将通过JavaScript动态生成 -->
+    <div id="app">
+        <!-- 主菜单 -->
+        <section id="screen-main" class="screen">
+            <header class="title-area">
+                <h1>🎲 骰子游戏 🎲</h1>
+            </header>
+            
+            <div class="selection-area">
+                <div class="group">
+                    <h2>选择对局</h2>
+                    <div id="mode-options" class="card-grid"></div>
+                </div>
+                <div class="group">
+                    <h2>选择初始骰子</h2>
+                    <div id="dice-options" class="card-grid"></div>
                 </div>
             </div>
 
-            <!-- 开始游戏按钮 -->
-            <button class="start-button" id="startButton">开始游戏</button>
-        </div>
+            <footer class="action-area">
+                <button id="btn-start" class="btn-primary">开始游戏</button>
+                <div class="help-link">ⓘ 游戏说明</div>
+            </footer>
+        </section>
+
+        <!-- 关卡界面 -->
+        <section id="screen-level" class="screen hidden">
+            <nav class="top-bar">
+                <button id="btn-level-back" class="btn-back">← 返回主菜单</button>
+                <div class="level-info">
+                    <span id="txt-level-num">第 1 关</span>
+                    <span id="txt-target">目标：500 点</span>
+                    <span id="txt-throws">投掷次数：0 / 10</span>
+                    <span id="txt-remaining">剩余：10</span>
+                    <span class="score-label">当前累计：<span id="txt-total-score">0</span></span>
+                </div>
+            </nav>
+
+            <div class="game-container">
+                <aside class="side-panel left">
+                    <div class="panel-section">
+                        <h3>投掷历史</h3>
+                        <div id="history-list" class="scroll-list">
+                            <div class="empty-msg">暂无投掷记录</div>
+                        </div>
+                    </div>
+                    <div class="panel-section">
+                        <h3>消耗品使用</h3>
+                        <div id="consume-history" class="scroll-list">
+                            <div class="empty-msg">暂无使用记录</div>
+                        </div>
+                    </div>
+                </aside>
+
+                <main class="center-stage">
+                    <div id="dice-table" class="dice-area"></div>
+                    <button id="btn-roll" class="btn-roll">投掷</button>
+                </main>
+
+                <aside class="side-panel right">
+                    <h3>👜 消耗品背包</h3>
+                    <div id="inventory" class="inventory-grid">
+                        <div class="slot empty"></div>
+                        <div class="slot empty"></div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- 出千商店 -->
+        <section id="screen-shop" class="screen hidden">
+            <nav class="top-bar">
+                <button id="btn-shop-back" class="btn-back">← 返回主菜单</button>
+                <div class="points-display">🪙 积分：<span id="txt-points">100</span></div>
+            </nav>
+
+            <div class="shop-content">
+                <h1>出千商店</h1>
+                <p class="subtitle">用积分购买升级和道具，提升你的千术</p>
+                
+                <div id="shop-items" class="shop-grid">
+                    <!-- 升级、新骰子、消耗品槽位 -->
+                </div>
+
+                <div class="shop-footer">
+                    <button id="btn-refresh" class="btn-secondary">刷新商店 (-50 积分)</button>
+                    <div class="next-level-info">下一关目标：<span id="txt-next-target">800 点</span></div>
+                    <button id="btn-next-level" class="btn-primary">进入下一关 →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 结算界面 -->
+        <section id="screen-victory" class="screen hidden">
+            <div class="victory-box">
+                <h1>YOU WIN</h1>
+                <p>恭喜通关！你已成为真正的千王之王。</p>
+                <button id="btn-victory-home" class="btn-primary">返回主菜单</button>
+            </div>
+        </section>
     </div>
 
-    <!-- 游戏界面 -->
-    <div class="game-container" id="gameContainer" style="display: none;">
-        <!-- 蓝色牌桌背景 -->
-        <div class="table">
-            <!-- 返回主菜单按钮 -->
-            <button class="back-button" id="backButton">返回主菜单</button>
-
-            <!-- 关卡信息显示 -->
-            <div class="level-info">
-                <div class="info-item">
-                    <span class="info-label">关卡:</span>
-                    <span class="info-value" id="currentLevel">1</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">投掷次数:</span>
-                    <span class="info-value" id="rollCount">0/3</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">当前总和:</span>
-                    <span class="info-value" id="currentSum">0</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">目标总和:</span>
-                    <span class="info-value" id="targetSum">8</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">积分:</span>
-                    <span class="info-value" id="currentScore">0</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">骰子数量:</span>
-                    <span class="info-value" id="diceCount">1</span>
-                </div>
-            </div>
-
-            <!-- 骰子选择 -->
-            <div class="dice-selection-level" id="diceSelectionLevel">
-                <h3>选择骰子数量</h3>
-                <div class="dice-count-options" id="diceCountOptions">
-                    <button class="dice-count-option" data-count="1">1个骰子</button>
-                    <button class="dice-count-option" data-count="2">2个骰子</button>
-                    <button class="dice-count-option" data-count="3">3个骰子</button>
-                </div>
-            </div>
-
-            <!-- 骰子容器 -->
-            <div class="dice-container" id="diceContainer">
-                <div class="dice" id="dice1">
-                    <!-- 骰子的6个面 -->
-                    <div class="dice-face face-1">1</div>
-                    <div class="dice-face face-2">2</div>
-                    <div class="dice-face face-3">3</div>
-                    <div class="dice-face face-4">4</div>
-                    <div class="dice-face face-5">5</div>
-                    <div class="dice-face face-6">6</div>
-                </div>
-                <div class="dice" id="dice2" style="display: none;">
-                    <!-- 骰子的6个面 -->
-                    <div class="dice-face face-1">1</div>
-                    <div class="dice-face face-2">2</div>
-                    <div class="dice-face face-3">3</div>
-                    <div class="dice-face face-4">4</div>
-                    <div class="dice-face face-5">5</div>
-                    <div class="dice-face face-6">6</div>
-                </div>
-                <div class="dice" id="dice3" style="display: none;">
-                    <!-- 骰子的6个面 -->
-                    <div class="dice-face face-1">1</div>
-                    <div class="dice-face face-2">2</div>
-                    <div class="dice-face face-3">3</div>
-                    <div class="dice-face face-4">4</div>
-                    <div class="dice-face face-5">5</div>
-                    <div class="dice-face face-6">6</div>
-                </div>
-            </div>
-
-            <!-- 消耗品显示 -->
-            <div class="consumables" id="consumables">
-                <h3>消耗品</h3>
-                <div class="consumable-items" id="consumableItems">
-                    <!-- 消耗品将通过JavaScript动态生成 -->
-                </div>
-            </div>
-
-            <!-- 掷骰子按钮 -->
-            <button class="roll-button" id="rollButton">掷骰子</button>
-        </div>
-    </div>
-
-    <!-- 结算界面 -->
-    <div class="result-modal" id="resultModal">
-        <div class="modal-content">
-            <h2 id="resultTitle">关卡完成!</h2>
-            <p id="resultMessage">恭喜你完成了关卡目标!</p>
-            <div class="result-stats">
-                <p>关卡: <span id="resultLevel">1</span></p>
-                <p>最终总和: <span id="resultSum">0</span></p>
-                <p>目标总和: <span id="resultTarget">8</span></p>
-            </div>
-            <div class="modal-buttons">
-                <button id="nextLevelButton" class="modal-button">进入下一关</button>
-                <button id="backToFirstButton" class="modal-button">回到第一关</button>
-                <button id="backToMainButton" class="modal-button">返回主菜单</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 出千界面 -->
-    <div class="cheat-modal" id="cheatModal">
-        <div class="modal-content">
-            <h2>出千机会</h2>
-            <p>你可以修改骰子来提高下一关的胜率!</p>
-            <p class="cheat-score">当前积分: <span id="cheatCurrentScore">0</span></p>
-
-            <!-- 骰子预览 -->
-            <div class="dice-preview" id="dicePreview">
-                <!-- 骰子预览将通过JavaScript动态生成 -->
-            </div>
-
-            <!-- 升级选项 -->
-            <div class="cheat-section">
-                <h3>升级选项</h3>
-                <div class="cheat-options" id="upgradeOptions">
-                    <!-- 升级选项将通过JavaScript动态生成 -->
-                </div>
-            </div>
-
-            <!-- 新骰子选项 -->
-            <div class="cheat-section">
-                <h3>新骰子</h3>
-                <div class="cheat-options" id="cheatDiceOptions">
-                    <!-- 新骰子选项将通过JavaScript动态生成 -->
-                </div>
-            </div>
-
-            <!-- 消耗品选项 -->
-            <div class="cheat-section">
-                <h3>消耗品</h3>
-                <div class="cheat-options" id="consumableOptions">
-                    <!-- 消耗品选项将通过JavaScript动态生成 -->
-                </div>
-            </div>
-
-            <!-- 修改历史 -->
-            <div class="cheat-history" id="cheatHistory">
-                <h3>修改历史</h3>
-                <div class="history-items" id="historyItems">
-                    <p class="no-history">暂无修改</p>
-                </div>
-            </div>
-
-            <div class="modal-buttons">
-                <button id="continueButton" class="modal-button">进入下一关</button>
-                <button id="resetDiceButton" class="modal-button">重置骰子</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 引入配置文件 -->
-    <script src="config/levelconfig.js"></script>
-    <script src="config/diceconfig.js"></script>
-    <script src="config/cheatconfig.js"></script>
-    <script src="js/script.js"></script>
+    <script type="module" src="js/script.js"></script>
 </body>
-
 </html>
