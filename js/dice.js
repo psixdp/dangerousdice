@@ -33,47 +33,52 @@ export class Dice {
         }
     }
 
-    // 升级：随机面互换
+    // 升级：系统随机选择该骰子的一个面，将其数字改为同一颗骰子上另一个面的数字
     upgradeSideSwap() {
-        const idx1 = Math.floor(Math.random() * this.sides.length);
-        const idx2 = Math.floor(Math.random() * this.sides.length);
-        this.sides[idx1] = this.sides[idx2];
+        const targetIdx = Math.floor(Math.random() * this.sides.length);
+        const sourceIdx = Math.floor(Math.random() * this.sides.length);
+        this.sides[targetIdx] = this.sides[sourceIdx];
     }
 
-    // 升级：所有面 +1 (倍率骰不适用)
+    // 升级：每个面的数字 +1 (倍率骰不适用)
     upgradeValueAdd() {
-        if (this.type === 'NORMAL') {
+        if (this.type !== 'MULTIPLIER') {
             this.sides = this.sides.map(s => s + 1);
         }
     }
 
     clone() {
-        return new Dice({
+        const d = new Dice({
             id: this.id,
             name: this.name,
             sides: this.sides,
             weights: this.weights,
             type: this.type
         });
+        d.lastRoll = this.lastRoll;
+        return d;
     }
 }
 
+/**
+ * 计分顺序：
+ * 1. 确定每颗骰子的值（空白骰替换为当前非空白中的最大值）
+ * 2. 求所有非倍率骰之和
+ * 3. 再乘上所有倍率骰的倍率
+ */
 export function calculateScore(rolls, diceTypes) {
-    // rolls: 数组，包含每颗骰子的掷出值
-    // diceTypes: 数组，包含每颗骰子的类型 (NORMAL, MULTIPLIER, BLANK)
-    
     let values = [...rolls];
     
-    // 1. 处理空白骰子：取非空白骰中的最大单颗值
-    const normalAndMultiplierValues = values.filter((v, i) => diceTypes[i] !== 'BLANK');
-    const maxNormalValue = normalAndMultiplierValues.length > 0 ? Math.max(...normalAndMultiplierValues) : 0;
+    // 1. 处理空白骰子
+    const nonBlankValues = values.filter((v, i) => diceTypes[i] !== 'BLANK');
+    const maxNonBlank = nonBlankValues.length > 0 ? Math.max(...nonBlankValues) : 0;
     
     values = values.map((v, i) => {
-        if (diceTypes[i] === 'BLANK') return maxNormalValue;
+        if (diceTypes[i] === 'BLANK') return maxNonBlank;
         return v;
     });
 
-    // 2. 求所有非倍率骰之和
+    // 2. 求非倍率骰之和
     let sum = 0;
     values.forEach((v, i) => {
         if (diceTypes[i] !== 'MULTIPLIER') {
@@ -81,13 +86,13 @@ export function calculateScore(rolls, diceTypes) {
         }
     });
 
-    // 3. 乘上所有倍率骰的倍率
-    let totalMultiplier = 1;
+    // 3. 乘上所有倍率骰
+    let multiplier = 1;
     values.forEach((v, i) => {
         if (diceTypes[i] === 'MULTIPLIER') {
-            totalMultiplier *= v;
+            multiplier *= v;
         }
     });
 
-    return Math.floor(sum * totalMultiplier);
+    return Math.floor(sum * multiplier);
 }

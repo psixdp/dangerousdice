@@ -8,68 +8,87 @@
 </head>
 <body>
     <div id="app">
-        <!-- 主菜单 -->
+        <!-- 主界面 -->
         <section id="screen-main" class="screen">
-            <header class="title-area">
-                <h1>🎲 骰子游戏 🎲</h1>
-            </header>
-            
-            <div class="selection-area">
-                <div class="group">
-                    <h2>选择对局</h2>
-                    <div id="mode-options" class="card-grid"></div>
-                </div>
-                <div class="group">
-                    <h2>选择初始骰子</h2>
-                    <div id="dice-options" class="card-grid"></div>
-                </div>
-            </div>
+            <div class="table-container">
+                <header class="main-header">
+                    <img src="https://www.figma.com/api/mcp/asset/97ed76a6-9fdd-4b91-9f6b-ea8b729c880f" alt="icon" class="title-icon">
+                    <h1>骰子游戏</h1>
+                    <img src="https://www.figma.com/api/mcp/asset/97ed76a6-9fdd-4b91-9f6b-ea8b729c880f" alt="icon" class="title-icon">
+                </header>
 
-            <footer class="action-area">
-                <button id="btn-start" class="btn-primary">开始游戏</button>
-                <div class="help-link">ⓘ 游戏说明</div>
-            </footer>
+                <div class="selection-section">
+                    <div class="selection-group">
+                        <h2>选择对局</h2>
+                        <div id="mode-options" class="card-grid">
+                            <!-- MODES -->
+                        </div>
+                    </div>
+
+                    <div class="selection-group">
+                        <h2>选择初始骰子</h2>
+                        <div id="dice-options" class="card-grid">
+                            <!-- INITIAL DICE -->
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="main-footer">
+                    <button id="btn-start" class="btn-primary-large">开始游戏</button>
+                    <button id="btn-help" class="btn-link">
+                        <img src="https://www.figma.com/api/mcp/asset/7cf583fd-3732-4b32-8f3c-308ec53d78a9" alt="help" class="small-icon">
+                        游戏说明
+                    </button>
+                </footer>
+            </div>
         </section>
 
         <!-- 关卡界面 -->
         <section id="screen-level" class="screen hidden">
-            <nav class="top-bar">
-                <button id="btn-level-back" class="btn-back">← 返回主菜单</button>
-                <div class="level-info">
+            <nav class="top-nav">
+                <button id="btn-level-back" class="btn-back">
+                    <img src="https://www.figma.com/api/mcp/asset/594d8867-6ce2-49e2-b00e-a800252dcc18" alt="back" class="small-icon">
+                    返回主菜单
+                </button>
+                <div class="level-stats">
                     <span id="txt-level-num">第 1 关</span>
                     <span id="txt-target">目标：500 点</span>
                     <span id="txt-throws">投掷次数：0 / 10</span>
                     <span id="txt-remaining">剩余：10</span>
-                    <span class="score-label">当前累计：<span id="txt-total-score">0</span></span>
+                    <span id="txt-total-score" class="highlight">当前累计：0</span>
                 </div>
             </nav>
 
-            <div class="game-container">
-                <aside class="side-panel left">
-                    <div class="panel-section">
+            <div class="game-layout">
+                <aside class="left-panel">
+                    <div class="panel-block">
                         <h3>投掷历史</h3>
-                        <div id="history-list" class="scroll-list">
-                            <div class="empty-msg">暂无投掷记录</div>
+                        <div id="history-list" class="history-scroll">
+                            <p class="empty-hint">暂无投掷记录</p>
                         </div>
                     </div>
-                    <div class="panel-section">
+                    <div class="panel-block">
                         <h3>消耗品使用</h3>
-                        <div id="consume-history" class="scroll-list">
-                            <div class="empty-msg">暂无使用记录</div>
+                        <div id="consume-history" class="history-scroll">
+                            <p class="empty-hint">暂无使用记录</p>
                         </div>
                     </div>
                 </aside>
 
-                <main class="center-stage">
-                    <div id="dice-table" class="dice-area"></div>
+                <main class="game-stage">
+                    <div id="dice-table" class="dice-slots">
+                        <!-- DICE -->
+                    </div>
                     <button id="btn-roll" class="btn-roll">投掷</button>
                 </main>
 
-                <aside class="side-panel right">
-                    <h3>👜 消耗品背包</h3>
+                <aside class="right-panel">
+                    <h3>
+                        <img src="https://www.figma.com/api/mcp/asset/2fb868e2-45eb-448c-aa09-6a0551d74548" alt="bag" class="small-icon">
+                        消耗品背包
+                    </h3>
                     <div id="inventory" class="inventory-grid">
-                        <div class="slot empty"></div>
-                        <div class="slot empty"></div>
+                        <!-- SLOTS -->
                     </div>
                 </aside>
             </div>
@@ -77,33 +96,52 @@
 
         <!-- 出千商店 -->
         <section id="screen-shop" class="screen hidden">
-            <nav class="top-bar">
-                <button id="btn-shop-back" class="btn-back">← 返回主菜单</button>
-                <div class="points-display">🪙 积分：<span id="txt-points">100</span></div>
+            <nav class="top-nav">
+                <button id="btn-shop-back" class="btn-back">
+                    <img src="https://www.figma.com/api/mcp/asset/7499ede7-df8d-45e9-b944-48f74116fe65" alt="back" class="small-icon">
+                    返回主菜单
+                </button>
+                <div class="points-badge">
+                    <img src="https://www.figma.com/api/mcp/asset/d957d207-3ae8-4429-98a6-9f7772a2db42" alt="coin" class="small-icon">
+                    <span id="txt-points">积分：350</span>
+                </div>
             </nav>
 
-            <div class="shop-content">
-                <h1>出千商店</h1>
-                <p class="subtitle">用积分购买升级和道具，提升你的千术</p>
-                
-                <div id="shop-items" class="shop-grid">
-                    <!-- 升级、新骰子、消耗品槽位 -->
+            <div class="shop-container">
+                <header class="shop-header">
+                    <h1>出千商店</h1>
+                    <p>用积分购买升级和道具，提升你的千术</p>
+                </header>
+
+                <div id="shop-items" class="shop-item-grid">
+                    <!-- SHOP ITEMS -->
                 </div>
 
-                <div class="shop-footer">
-                    <button id="btn-refresh" class="btn-secondary">刷新商店 (-50 积分)</button>
-                    <div class="next-level-info">下一关目标：<span id="txt-next-target">800 点</span></div>
-                    <button id="btn-next-level" class="btn-primary">进入下一关 →</button>
-                </div>
+                <footer class="shop-footer">
+                    <button id="btn-refresh" class="btn-secondary">
+                        <img src="https://www.figma.com/api/mcp/asset/755ca7fd-ae86-4100-bd05-1812289ff8db" alt="refresh" class="small-icon">
+                        刷新商店 (-50 积分)
+                    </button>
+                    <div class="next-goal">
+                        <span>下一关目标</span>
+                        <strong id="txt-next-target">800 点</strong>
+                    </div>
+                    <button id="btn-next-level" class="btn-primary-rect">
+                        进入下一关
+                        <img src="https://www.figma.com/api/mcp/asset/dc2f5bf9-73c0-4e62-8d3b-b20b63570589" alt="next" class="small-icon">
+                    </button>
+                </footer>
             </div>
         </section>
 
         <!-- 结算界面 -->
         <section id="screen-victory" class="screen hidden">
-            <div class="victory-box">
-                <h1>YOU WIN</h1>
-                <p>恭喜通关！你已成为真正的千王之王。</p>
-                <button id="btn-victory-home" class="btn-primary">返回主菜单</button>
+            <div class="victory-overlay">
+                <div class="victory-card">
+                    <h1>YOU WIN</h1>
+                    <p>恭喜通关！你已成为真正的千王之王。</p>
+                    <button id="btn-victory-home" class="btn-primary-large">返回主菜单</button>
+                </div>
             </div>
         </section>
     </div>

@@ -14,6 +14,10 @@ export class UI {
             victory: document.getElementById('screen-victory')
         };
 
+        this.selectedModeId = 'CLASSIC';
+        this.selectedDiceId = 'STANDARD_6';
+        this.shopStock = null;
+
         this.initEvents();
         this.renderMainMenu();
     }
@@ -27,16 +31,17 @@ export class UI {
     initEvents() {
         // 主界面
         document.getElementById('btn-start').addEventListener('click', () => this.onStartGame());
+        document.getElementById('btn-help').addEventListener('click', () => alert("千王之王：投掷骰子累计点数，超过目标过关。商店可购买升级！"));
 
         // 关卡界面
         document.getElementById('btn-level-back').addEventListener('click', () => {
-            if(confirm("确定要放弃本局对局并返回主菜单吗？")) this.showScreen('main');
+            if(confirm("确定要放弃本局并返回主菜单吗？")) this.showScreen('main');
         });
         document.getElementById('btn-roll').addEventListener('click', () => this.onRoll());
 
         // 商店界面
         document.getElementById('btn-shop-back').addEventListener('click', () => {
-            if(confirm("确定要放弃本局对局并返回主菜单吗？")) this.showScreen('main');
+            if(confirm("确定要放弃本局并返回主菜单吗？")) this.showScreen('main');
         });
         document.getElementById('btn-refresh').addEventListener('click', () => this.onRefreshShop());
         document.getElementById('btn-next-level').addEventListener('click', () => this.onNextLevel());
@@ -65,17 +70,13 @@ export class UI {
         CONFIG.INITIAL_DICE.forEach(dice => {
             const card = document.createElement('div');
             card.className = 'card' + (this.selectedDiceId === dice.id ? ' selected' : '');
-            card.innerHTML = `<div class="dice-icon">6</div><h3>${dice.name}</h3>`;
+            card.innerHTML = `<h3>${dice.name}</h3><p>类型：${dice.type}</p>`;
             card.onclick = () => {
                 this.selectedDiceId = dice.id;
                 this.renderMainMenu();
             };
             diceList.appendChild(card);
         });
-
-        // 默认选中
-        if (!this.selectedModeId) this.selectedModeId = CONFIG.MODES.CLASSIC.id;
-        if (!this.selectedDiceId) this.selectedDiceId = CONFIG.INITIAL_DICE[0].id;
     }
 
     onStartGame() {
@@ -91,7 +92,7 @@ export class UI {
         document.getElementById('txt-target').innerText = `目标：${level.target} 点`;
         document.getElementById('txt-throws').innerText = `投掷次数：${this.gs.usedThrows} / ${level.throws}`;
         document.getElementById('txt-remaining').innerText = `剩余：${level.throws - this.gs.usedThrows}`;
-        document.getElementById('txt-total-score').innerText = this.gs.totalScoreInLevel;
+        document.getElementById('txt-total-score').innerText = `当前累计：${this.gs.totalScoreInLevel}`;
 
         this.renderHistory();
         this.renderInventory();
@@ -102,21 +103,21 @@ export class UI {
         const list = document.getElementById('history-list');
         list.innerHTML = '';
         if (this.gs.history.length === 0) {
-            list.innerHTML = '<div class="empty-msg">暂无投掷记录</div>';
-            return;
+            list.innerHTML = '<p class="empty-hint">暂无投掷记录</p>';
+        } else {
+            this.gs.history.forEach(h => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.style.padding = '8px';
+                item.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+                item.innerHTML = `<strong>第${h.num}次：${h.score}分</strong> <br><small>结果：[${h.rolls.join(', ')}] ${h.info}</small>`;
+                list.appendChild(item);
+            });
+            list.scrollTop = list.scrollHeight;
         }
-        this.gs.history.forEach(h => {
-            const item = document.createElement('div');
-            item.className = 'history-item';
-            item.style.padding = '8px';
-            item.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
-            item.innerHTML = `<strong>第${h.num}次：${h.score}分</strong> <br><small>结果：[${h.rolls.join(', ')}]</small>`;
-            list.appendChild(item);
-        });
-        list.scrollTop = list.scrollHeight;
 
         const cList = document.getElementById('consume-history');
-        cList.innerHTML = this.gs.consumeHistory.length > 0 ? this.gs.consumeHistory.map(h => `<div style="padding:5px;font-size:12px;">${h}</div>`).join('') : '<div class="empty-msg">暂无使用记录</div>';
+        cList.innerHTML = this.gs.consumeHistory.length > 0 ? this.gs.consumeHistory.map(h => `<div style="padding:5px;font-size:12px;">${h}</div>`).join('') : '<p class="empty-hint">暂无使用记录</p>';
     }
 
     renderInventory() {
@@ -125,9 +126,9 @@ export class UI {
         for (let i = 0; i < 2; i++) {
             const item = this.gs.inventory[i];
             const slot = document.createElement('div');
-            slot.className = 'slot' + (item ? '' : ' empty');
+            slot.className = 'inv-slot' + (item ? ' active' : '');
             if (item) {
-                const icon = item.type === 'ROLLBACK' ? '🔄' : (item.type === 'GREEDY' ? '🍀' : '👁️');
+                const icon = this.getConsumableEmoji(item.type);
                 slot.innerHTML = `<div class="item-icon">${icon}</div><div class="item-name">${item.name}</div>`;
                 slot.onclick = () => this.onUseItem(i);
             }
@@ -135,13 +136,22 @@ export class UI {
         }
     }
 
-    renderDiceTable(rolls = []) {
+    getConsumableEmoji(type) {
+        switch(type) {
+            case 'ROLLBACK': return '🔄';
+            case 'GREEDY': return '🍀';
+            case 'POOR': return '👁️';
+            default: return '❓';
+        }
+    }
+
+    renderDiceTable() {
         const table = document.getElementById('dice-table');
         table.innerHTML = '';
-        this.gs.diceInPlay.forEach((d, i) => {
+        this.gs.diceInPlay.forEach((d) => {
             const die = document.createElement('div');
-            die.className = 'die';
-            die.innerText = rolls[i] !== undefined ? rolls[i] : (d.lastRoll || '?');
+            die.className = 'die-card';
+            die.innerText = d.lastRoll || '?';
             table.appendChild(die);
         });
     }
@@ -152,31 +162,42 @@ export class UI {
             this.renderLevel();
             if (this.gs.isLevelPassed()) {
                 setTimeout(() => {
-                    alert("过关成功！获得奖励积分。");
+                    alert("过关成功！");
                     this.gs.finishLevel();
+                    this.shopStock = null; // 进商店强制刷新一次货架
                     this.renderShop();
                     this.showScreen('shop');
-                }, 500);
+                }, 300);
             } else if (this.gs.isLevelFailed()) {
                 setTimeout(() => {
-                    alert("游戏结束：点数不足，请重试！");
+                    alert("投掷次数用尽，关卡失败！");
                     this.showScreen('main');
-                }, 500);
+                }, 300);
             }
         }
     }
 
     onUseItem(idx) {
         const item = this.gs.inventory[idx];
-        if (this.gs.useConsumable(item.type)) {
+        const result = this.gs.useConsumable(item.type);
+        if (result) {
             this.gs.inventory.splice(idx, 1);
             this.renderLevel();
+            if (item.type === 'ROLLBACK' && this.gs.isLevelPassed()) {
+                setTimeout(() => {
+                    alert("回溯后过关！");
+                    this.gs.finishLevel();
+                    this.shopStock = null;
+                    this.renderShop();
+                    this.showScreen('shop');
+                }, 300);
+            }
         }
     }
 
     // --- 商店界面 ---
     renderShop() {
-        document.getElementById('txt-points').innerText = this.gs.points;
+        document.getElementById('txt-points').innerText = `积分：${this.gs.points}`;
         const nextTarget = CONFIG.LEVELS[this.gs.currentLevelIdx + 1]?.target || '???';
         document.getElementById('txt-next-target').innerText = `${nextTarget} 点`;
 
@@ -186,23 +207,33 @@ export class UI {
         shopGrid.innerHTML = '';
         this.shopStock.forEach((item, idx) => {
             const card = document.createElement('div');
-            card.className = 'shop-card';
-            const icon = this.getItemIcon(item);
+            card.className = 'shop-item';
+            const visual = this.getItemVisual(item);
             card.innerHTML = `
-                <span class="tag">${item.category}</span>
-                <div class="icon">${icon}</div>
+                <div class="item-category">
+                    <img src="https://www.figma.com/api/mcp/asset/d957d207-3ae8-4429-98a6-9f7772a2db42" class="small-icon">
+                    ${item.category}
+                </div>
+                <div class="item-visual">${visual}</div>
                 <h3>${item.name}</h3>
                 <p>${item.description}</p>
-                <div class="price">🪙 ${item.price}</div>
+                <button class="btn-buy">
+                    <img src="https://www.figma.com/api/mcp/asset/d957d207-3ae8-4429-98a6-9f7772a2db42" class="small-icon">
+                    ${item.price}
+                </button>
             `;
             card.onclick = () => this.onBuyItem(item, idx);
             shopGrid.appendChild(card);
         });
     }
 
-    getItemIcon(item) {
-        if (item.category === '升级') return '✨';
-        if (item.category === '消耗品') return '🎒';
+    getItemVisual(item) {
+        if (item.category === '骰子升级') {
+            if (item.type === 'WEIGHT') return '⬆️';
+            if (item.type === 'SWAP') return '✨';
+            if (item.type === 'ADD') return '➕';
+        }
+        if (item.category === '消耗品') return this.getConsumableEmoji(item.type);
         if (item.category === '新骰子') return '🎲';
         return '❓';
     }
@@ -211,7 +242,7 @@ export class UI {
         this.shopStock = [];
         // 2个升级
         const upgrades = [...CONFIG.UPGRADES].sort(() => Math.random() - 0.5).slice(0, 2);
-        upgrades.forEach(u => this.shopStock.push({ ...u, category: '升级' }));
+        upgrades.forEach(u => this.shopStock.push({ ...u, category: '骰子升级' }));
         // 1个消耗品
         const consumable = CONFIG.CONSUMABLES[Math.floor(Math.random() * CONFIG.CONSUMABLES.length)];
         this.shopStock.push({ ...consumable, category: '消耗品' });
@@ -236,8 +267,7 @@ export class UI {
             return;
         }
 
-        if (item.category === '升级') {
-            // 选择骰子进行升级
+        if (item.category === '骰子升级') {
             const diceIdx = prompt(`请选择要升级的骰子编号 (1-${this.gs.diceInPlay.length}):`, "1");
             const dIdx = parseInt(diceIdx) - 1;
             if (this.gs.diceInPlay[dIdx]) {

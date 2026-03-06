@@ -8,8 +8,8 @@ export const CONFIG = {
         CLASSIC: {
             id: 'CLASSIC',
             name: '经典对局',
-            description: '初始积分：100，目标：1000',
-            initialPoints: 100,
+            description: '初始积分：10，利息最大 5',
+            initialPoints: 10,
             interestRate: 0.2,
             maxInterest: 5,
             refreshCost: 50,
@@ -18,12 +18,12 @@ export const CONFIG = {
         SNAKE: {
             id: 'SNAKE',
             name: '贪吃蛇',
-            description: '初始积分：50，高难度挑战',
-            initialPoints: 50,
+            description: '初始积分：5，高难度挑战',
+            initialPoints: 5,
             interestRate: 0.2,
             maxInterest: 5,
             refreshCost: 50,
-            calcScore: (remThrows, usedThrows) => Math.max(0, remThrows * 3 - usedThrows * 1)
+            calcScore: (remThrows, usedThrows) => remThrows * 3 - usedThrows * 1
         }
     },
 
@@ -85,14 +85,6 @@ export const CONFIG = {
             weights: [1, 1, 1, 1, 1, 1],
             type: 'BLANK',
             price: 180
-        },
-        {
-            id: 'TWELVE_SIDED',
-            name: '十二面骰',
-            sides: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-            weights: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            type: 'NORMAL',
-            price: 150
         }
     ],
 
@@ -107,15 +99,15 @@ export const CONFIG = {
         },
         {
             id: 'SIDE_SWAP',
-            name: '幸运强化',
-            description: '随机一面对调',
+            name: '面位互换',
+            description: '随机一个面改为另一个面',
             price: 120,
             type: 'SWAP'
         },
         {
             id: 'VALUE_ADD',
             name: '点数加成',
-            description: '所有面点数 +1',
+            description: '每个面点数 +1',
             price: 100,
             type: 'ADD'
         }
@@ -125,21 +117,21 @@ export const CONFIG = {
     CONSUMABLES: [
         {
             id: 'ROLLBACK',
-            name: '重投币',
-            description: '回溯上一次投掷',
+            name: '回溯祝福',
+            description: '重投上一次',
             price: 80,
             type: 'ROLLBACK'
         },
         {
             id: 'GREEDY',
-            name: '幸运花',
-            description: '下次投掷最大点数 +1',
+            name: '贪心祝福',
+            description: '下次投掷最大值+1',
             price: 100,
             type: 'GREEDY'
         },
         {
             id: 'POOR',
-            name: '穷鬼之眼',
+            name: '穷鬼祝福',
             description: '下次计分忽略最小值',
             price: 60,
             type: 'POOR'
