@@ -96,6 +96,8 @@ export class UI {
         document.getElementById('txt-total-score').innerText = `当前累计：${this.gs.totalScoreInLevel}`;
 
         const btnRoll = document.getElementById('btn-roll');
+        console.log('Rendering button:', btnRoll);
+        console.log('isProcessing:', this.isProcessing, 'usedThrows:', this.gs.usedThrows, 'max:', level.throws);
         btnRoll.disabled = this.isProcessing || this.gs.usedThrows >= level.throws;
 
         this.renderHistory();

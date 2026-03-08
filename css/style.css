@@ -281,6 +281,8 @@ body {
     color: var(--text-grey);
     cursor: not-allowed;
     box-shadow: none;
+    opacity: 0.5;
+    border: 2px dashed var(--text-grey);
 }
 
 .right-panel {
