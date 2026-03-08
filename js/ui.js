@@ -172,23 +172,23 @@ export class UI {
         const record = this.gs.rollDice();
         if (record) {
             this.renderLevel();
+
+            // 立即检查游戏结果，而不是等待 setTimeout
             if (this.gs.isLevelPassed()) {
-                setTimeout(() => {
-                    alert("过关成功！");
-                    this.gs.finishLevel();
-                    this.shopStock = null; // 进商店强制刷新一次货架
-                    this.renderShop();
-                    this.showScreen('shop');
-                    this.isProcessing = false;
-                }, 300);
+                alert("过关成功！");
+                this.gs.finishLevel();
+                this.shopStock = null; // 进商店强制刷新一次货架
+                this.renderShop();
+                this.showScreen('shop');
+                this.isProcessing = false;
             } else if (this.gs.isLevelFailed()) {
-                setTimeout(() => {
-                    alert("投掷次数用尽，关卡失败！");
-                    this.showScreen('main');
-                    this.renderMainMenu(); // 强制重新渲染主菜单
-                    this.isProcessing = false;
-                }, 300);
+                alert("投掷次数用尽，关卡失败！");
+                this.showScreen('main');
+                this.renderMainMenu(); // 强制重新渲染主菜单
+                this.isProcessing = false;
             } else {
+                // 正常投掷完成，isProcessing 已经在 renderLevel() 之前设置为 true
+                // renderLevel() 会设置按钮状态，这里只需重置
                 this.isProcessing = false;
             }
         } else {
@@ -205,16 +205,17 @@ export class UI {
         if (result) {
             this.gs.inventory.splice(idx, 1);
             this.renderLevel();
+
+            // 立即检查游戏结果
             if (item.type === 'ROLLBACK' && this.gs.isLevelPassed()) {
-                setTimeout(() => {
-                    alert("回溯后过关！");
-                    this.gs.finishLevel();
-                    this.shopStock = null;
-                    this.renderShop();
-                    this.showScreen('shop');
-                    this.isProcessing = false;
-                }, 300);
+                alert("回溯后过关！");
+                this.gs.finishLevel();
+                this.shopStock = null;
+                this.renderShop();
+                this.showScreen('shop');
+                this.isProcessing = false;
             } else {
+                // 消耗品使用完成（不是回溯后过关），isProcessing 已经在 renderLevel() 之前设置为 true
                 this.isProcessing = false;
             }
         } else {
