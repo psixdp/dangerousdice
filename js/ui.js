@@ -101,7 +101,15 @@ export class UI {
         const btnRoll = document.getElementById('btn-roll');
         console.log('Rendering button:', btnRoll);
         console.log('isProcessing:', this.isProcessing, 'usedThrows:', this.gs.usedThrows, 'max:', level.throws);
-        btnRoll.disabled = this.isProcessing || this.gs.usedThrows >= level.throws;
+
+        // 只有在 isProcessing 为 false 时才更新按钮状态
+        // 否则按钮会保持禁用直到 onRoll() 完成所有逻辑
+        if (!this.isProcessing) {
+            btnRoll.disabled = this.gs.usedThrows >= level.throws;
+            console.log('Button disabled =', btnRoll.disabled);
+        } else {
+            console.log('isProcessing is true, button remains disabled');
+        }
 
         this.renderHistory();
         this.renderInventory();
@@ -181,8 +189,9 @@ export class UI {
         console.log('rollDice() result:', record ? 'success' : 'null');
 
         if (record) {
+            console.log('Before renderLevel() call');
             this.renderLevel();
-            console.log('renderLevel() called');
+            console.log('After renderLevel() call');
 
             if (this.gs.isLevelPassed()) {
                 console.log('Level PASSED!');
@@ -191,21 +200,20 @@ export class UI {
                 this.shopStock = null;
                 this.renderShop();
                 this.showScreen('shop');
-                this.isProcessing = false;
-                console.log('isProcessing set to false (passed)');
             } else if (this.gs.isLevelFailed()) {
                 console.log('Level FAILED!');
                 alert("投掷次数用尽，关卡失败！");
                 this.showScreen('main');
                 this.renderMainMenu();
-                this.isProcessing = false;
-                console.log('isProcessing set to false (failed)');
             } else {
                 console.log('Normal roll - game not finished');
-                // isProcessing 会在 renderLevel() 之后设置为 false
-                this.isProcessing = false;
-                console.log('isProcessing set to false (normal)');
+                // 此时 isProcessing 是 true，按钮保持禁用，等待下次点击
             }
+
+            // 在所有逻辑完成后，重置 isProcessing 并重新渲染按钮状态
+            this.isProcessing = false;
+            console.log('isProcessing set to false (after all logic)');
+            this.renderLevel(); // 重新渲染以更新按钮状态
         } else {
             console.log('No record from rollDice(), isProcessing = false');
             this.isProcessing = false;
@@ -232,11 +240,13 @@ export class UI {
                 this.shopStock = null;
                 this.renderShop();
                 this.showScreen('shop');
-                this.isProcessing = false;
             } else {
-                // 消耗品使用完成（不是回溯后过关），isProcessing 已经在 renderLevel() 之前设置为 true
-                this.isProcessing = false;
+                // 消耗品使用完成（不是回溯后过关）
             }
+
+            // 重置 isProcessing 并重新渲染按钮状态
+            this.isProcessing = false;
+            this.renderLevel(); // 重新渲染以更新按钮状态
         } else {
             this.isProcessing = false;
         }
