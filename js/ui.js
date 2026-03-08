@@ -166,34 +166,53 @@ export class UI {
     }
 
     onRoll() {
-        if (this.isProcessing) return;
+        console.log('=== onRoll START ===');
+        console.log('Before check: isProcessing =', this.isProcessing);
+        console.log('usedThrows =', this.gs.usedThrows, 'max throws =', this.gs.currentLevel.throws);
+
+        if (this.isProcessing) {
+            console.log('isProcessing is true, returning early');
+            return;
+        }
         this.isProcessing = true;
+        console.log('isProcessing set to true');
 
         const record = this.gs.rollDice();
+        console.log('rollDice() result:', record ? 'success' : 'null');
+
         if (record) {
             this.renderLevel();
+            console.log('renderLevel() called');
 
-            // 立即检查游戏结果，而不是等待 setTimeout
             if (this.gs.isLevelPassed()) {
+                console.log('Level PASSED!');
                 alert("过关成功！");
                 this.gs.finishLevel();
-                this.shopStock = null; // 进商店强制刷新一次货架
+                this.shopStock = null;
                 this.renderShop();
                 this.showScreen('shop');
                 this.isProcessing = false;
+                console.log('isProcessing set to false (passed)');
             } else if (this.gs.isLevelFailed()) {
+                console.log('Level FAILED!');
                 alert("投掷次数用尽，关卡失败！");
                 this.showScreen('main');
-                this.renderMainMenu(); // 强制重新渲染主菜单
+                this.renderMainMenu();
                 this.isProcessing = false;
+                console.log('isProcessing set to false (failed)');
             } else {
-                // 正常投掷完成，isProcessing 已经在 renderLevel() 之前设置为 true
-                // renderLevel() 会设置按钮状态，这里只需重置
+                console.log('Normal roll - game not finished');
+                // isProcessing 会在 renderLevel() 之后设置为 false
                 this.isProcessing = false;
+                console.log('isProcessing set to false (normal)');
             }
         } else {
+            console.log('No record from rollDice(), isProcessing = false');
             this.isProcessing = false;
         }
+
+        console.log('=== onRoll END ===');
+        console.log('Final: isProcessing =', this.isProcessing);
     }
 
     onUseItem(idx) {
