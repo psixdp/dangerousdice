@@ -42,7 +42,10 @@ export class UI {
 
         // 商店界面
         document.getElementById('btn-shop-back').addEventListener('click', () => {
-            if(confirm("确定要放弃本局并返回主菜单吗？")) this.showScreen('main');
+            if(confirm("确定要放弃本局并返回主菜单吗？")) {
+                this.showScreen('main');
+                this.renderMainMenu(); // 强制重新渲染主菜单
+            }
         });
         document.getElementById('btn-refresh').addEventListener('click', () => this.onRefreshShop());
         document.getElementById('btn-next-level').addEventListener('click', () => this.onNextLevel());
@@ -182,6 +185,7 @@ export class UI {
                 setTimeout(() => {
                     alert("投掷次数用尽，关卡失败！");
                     this.showScreen('main');
+                    this.renderMainMenu(); // 强制重新渲染主菜单
                     this.isProcessing = false;
                 }, 300);
             } else {
