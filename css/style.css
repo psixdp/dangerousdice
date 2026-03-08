@@ -276,6 +276,13 @@ body {
     box-shadow: 0 10px 15px rgba(254, 154, 0, 0.5);
 }
 
+.btn-roll:disabled {
+    background: var(--card-bg-inactive);
+    color: var(--text-grey);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
 .right-panel {
     width: 256px;
     background: var(--panel-bg);

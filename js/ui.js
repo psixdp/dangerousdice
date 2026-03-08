@@ -5,6 +5,7 @@ export class UI {
     constructor(gameState) {
         this.gs = gameState;
         this.currentScreen = 'screen-main';
+        this.isProcessing = false; // 防止重复点击
         
         // 绑定元素
         this.screens = {
@@ -94,6 +95,9 @@ export class UI {
         document.getElementById('txt-remaining').innerText = `剩余：${level.throws - this.gs.usedThrows}`;
         document.getElementById('txt-total-score').innerText = `当前累计：${this.gs.totalScoreInLevel}`;
 
+        const btnRoll = document.getElementById('btn-roll');
+        btnRoll.disabled = this.isProcessing || this.gs.usedThrows >= level.throws;
+
         this.renderHistory();
         this.renderInventory();
         this.renderDiceTable();
@@ -157,6 +161,9 @@ export class UI {
     }
 
     onRoll() {
+        if (this.isProcessing) return;
+        this.isProcessing = true;
+
         const record = this.gs.rollDice();
         if (record) {
             this.renderLevel();
@@ -167,17 +174,26 @@ export class UI {
                     this.shopStock = null; // 进商店强制刷新一次货架
                     this.renderShop();
                     this.showScreen('shop');
+                    this.isProcessing = false;
                 }, 300);
             } else if (this.gs.isLevelFailed()) {
                 setTimeout(() => {
                     alert("投掷次数用尽，关卡失败！");
                     this.showScreen('main');
+                    this.isProcessing = false;
                 }, 300);
+            } else {
+                this.isProcessing = false;
             }
+        } else {
+            this.isProcessing = false;
         }
     }
 
     onUseItem(idx) {
+        if (this.isProcessing) return;
+        this.isProcessing = true;
+
         const item = this.gs.inventory[idx];
         const result = this.gs.useConsumable(item.type);
         if (result) {
@@ -190,8 +206,13 @@ export class UI {
                     this.shopStock = null;
                     this.renderShop();
                     this.showScreen('shop');
+                    this.isProcessing = false;
                 }, 300);
+            } else {
+                this.isProcessing = false;
             }
+        } else {
+            this.isProcessing = false;
         }
     }
 
