@@ -290,6 +290,15 @@ body {
     font-size: 28px;
 }
 
+.btn-roll:disabled {
+    background: var(--card-bg-inactive);
+    color: var(--text-grey);
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.5;
+    border: 2px dashed var(--text-grey);
+}
+
 .right-panel {
     width: 260px;
     border-right: none;
