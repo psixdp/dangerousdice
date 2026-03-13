@@ -8,21 +8,21 @@ export const CONFIG = {
         CLASSIC: {
             id: 'CLASSIC',
             name: '经典对局',
-            description: '初始积分：10，利息最大 5',
+            description: '初始积分：10 | 结算：5 + 剩余次数×2 | 利息：20% (Max 5)',
             initialPoints: 10,
             interestRate: 0.2,
             maxInterest: 5,
-            refreshCost: 50,
+            refreshCost: 20, // 暂时定为 20
             calcScore: (remThrows, usedThrows) => 5 + remThrows * 2
         },
         SNAKE: {
             id: 'SNAKE',
             name: '贪吃蛇',
-            description: '初始积分：5，高难度挑战',
+            description: '初始积分：5 | 结算：剩余×3 - 已用×1 | 利息：20% (Max 5)',
             initialPoints: 5,
             interestRate: 0.2,
             maxInterest: 5,
-            refreshCost: 50,
+            refreshCost: 20,
             calcScore: (remThrows, usedThrows) => remThrows * 3 - usedThrows * 1
         }
     },
@@ -60,15 +60,15 @@ export const CONFIG = {
             sides: [1, 2, 3, 4],
             weights: [1, 1, 1, 1],
             type: 'NORMAL',
-            price: 150
+            price: 15
         },
         {
             id: 'SIX_111666',
-            name: '极端六面骰',
+            name: '极限六面骰',
             sides: [1, 1, 1, 6, 6, 6],
             weights: [1, 1, 1, 1, 1, 1],
             type: 'NORMAL',
-            price: 150
+            price: 15
         },
         {
             id: 'MULTIPLIER_6',
@@ -76,7 +76,7 @@ export const CONFIG = {
             sides: [0.8, 0.9, 1.1, 1.2, 1.3, 1.4],
             weights: [1, 1, 1, 1, 1, 1],
             type: 'MULTIPLIER',
-            price: 200
+            price: 20
         },
         {
             id: 'BLANK_6',
@@ -84,7 +84,7 @@ export const CONFIG = {
             sides: [0, 0, 0, 0, 0, 0], // 逻辑中处理
             weights: [1, 1, 1, 1, 1, 1],
             type: 'BLANK',
-            price: 180
+            price: 18
         }
     ],
 
@@ -93,52 +93,52 @@ export const CONFIG = {
         {
             id: 'WEIGHT_MAX',
             name: '概率加倍',
-            description: '最大数字面权重翻倍',
-            price: 100,
+            description: '最大数字面权重为原有的两倍',
+            price: 10,
             type: 'WEIGHT'
         },
         {
             id: 'SIDE_SWAP',
             name: '面位互换',
-            description: '随机一个面改为另一个面',
-            price: 120,
+            description: '随机一个面改为另一个面的数字',
+            price: 12,
             type: 'SWAP'
         },
         {
             id: 'VALUE_ADD',
             name: '点数加成',
-            description: '每个面点数 +1',
-            price: 100,
+            description: '每个面的数字 +1 (倍率骰不适用)',
+            price: 15,
             type: 'ADD'
         }
     ],
 
-    // 消耗品
+    // 消耗品 (背包上限 2)
     CONSUMABLES: [
         {
             id: 'ROLLBACK',
             name: '回溯祝福',
-            description: '重投上一次',
-            price: 80,
+            description: '撤销最近一次投掷，不扣次数并重投',
+            price: 8,
             type: 'ROLLBACK'
         },
         {
             id: 'GREEDY',
             name: '贪心祝福',
-            description: '下次投掷最大值+1',
-            price: 100,
+            description: '下次投掷中，最大点数面额外 +1',
+            price: 10,
             type: 'GREEDY'
         },
         {
             id: 'POOR',
             name: '穷鬼祝福',
-            description: '下次计分忽略最小值',
-            price: 60,
+            description: '下次计分时，忽略一颗最小值的骰子',
+            price: 6,
             type: 'POOR'
         }
     ],
 
-    // 关卡配置
+    // 关卡配置 (根据需求调整)
     LEVELS: [
         { target: 10, throws: 10 },
         { target: 20, throws: 10 },

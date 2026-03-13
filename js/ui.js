@@ -1,12 +1,13 @@
 import { CONFIG } from './config.js';
 import { Dice } from './dice.js';
+import { Dice3D } from './dice3d.js';
 
 export class UI {
     constructor(gameState) {
         this.gs = gameState;
         this.currentScreen = 'screen-main';
-        
-        // 绑定元素
+
+        // 界面绑定
         this.screens = {
             main: document.getElementById('screen-main'),
             level: document.getElementById('screen-level'),
@@ -17,6 +18,9 @@ export class UI {
         this.selectedModeId = 'CLASSIC';
         this.selectedDiceId = 'STANDARD_6';
         this.shopStock = null;
+
+        // 3D 骰子实例数组（仅用于关卡界面的投掷骰子）
+        this.dice3DInstances = [];
 
         this.initEvents();
         this.renderMainMenu();
@@ -30,33 +34,41 @@ export class UI {
 
     initEvents() {
         // 主界面
-        document.getElementById('btn-start').addEventListener('click', () => this.onStartGame());
-        document.getElementById('btn-help').addEventListener('click', () => alert("千王之王：投掷骰子累计点数，超过目标过关。商店可购买升级！"));
+        document.getElementById('btn-start').onclick = () => this.onStartGame();
 
         // 关卡界面
-        document.getElementById('btn-level-back').addEventListener('click', () => {
-            if(confirm("确定要放弃本局并返回主菜单吗？")) this.showScreen('main');
-        });
-        document.getElementById('btn-roll').addEventListener('click', () => this.onRoll());
+        document.getElementById('btn-quit').onclick = () => {
+            if(confirm("确定要放弃本局吗？")) this.showScreen('main');
+        };
+        document.getElementById('btn-roll').onclick = () => this.onRoll();
 
         // 商店界面
-        document.getElementById('btn-shop-back').addEventListener('click', () => {
-            if(confirm("确定要放弃本局并返回主菜单吗？")) this.showScreen('main');
-        });
-        document.getElementById('btn-refresh').addEventListener('click', () => this.onRefreshShop());
-        document.getElementById('btn-next-level').addEventListener('click', () => this.onNextLevel());
+        document.getElementById('btn-shop-quit').onclick = () => {
+            if(confirm("确定要放弃本局吗？")) this.showScreen('main');
+        };
+        document.getElementById('btn-refresh').onclick = () => this.onRefreshShop();
+        document.getElementById('btn-next').onclick = () => this.onNextLevel();
 
-        // 结算界面
-        document.getElementById('btn-victory-home').addEventListener('click', () => this.showScreen('main'));
+        // 胜利界面
+        document.getElementById('btn-home').onclick = () => this.showScreen('main');
+
+        // 结算弹窗
+        document.getElementById('btn-result-continue').onclick = () => this.onResultContinue();
     }
 
-    // --- 主界面 ---
+    // --- 渲染逻辑 ---
+
     renderMainMenu() {
-        const modeList = document.getElementById('mode-options');
+        // 模式选择
+        const modeList = document.getElementById('mode-list');
+        if (!modeList) {
+            console.error("Element #mode-list not found!");
+            return;
+        }
         modeList.innerHTML = '';
         Object.values(CONFIG.MODES).forEach(mode => {
             const card = document.createElement('div');
-            card.className = 'card' + (this.selectedModeId === mode.id ? ' selected' : '');
+            card.className = `card mode-card ${this.selectedModeId === mode.id ? 'selected' : ''}`;
             card.innerHTML = `<h3>${mode.name}</h3><p>${mode.description}</p>`;
             card.onclick = () => {
                 this.selectedModeId = mode.id;
@@ -65,12 +77,20 @@ export class UI {
             modeList.appendChild(card);
         });
 
-        const diceList = document.getElementById('dice-options');
+        // 初始骰子选择
+        const diceList = document.getElementById('dice-list');
+        if (!diceList) {
+            console.error("Element #dice-list not found!");
+            return;
+        }
         diceList.innerHTML = '';
         CONFIG.INITIAL_DICE.forEach(dice => {
             const card = document.createElement('div');
-            card.className = 'card' + (this.selectedDiceId === dice.id ? ' selected' : '');
-            card.innerHTML = `<h3>${dice.name}</h3><p>类型：${dice.type}</p>`;
+            card.className = `card dice-card ${this.selectedDiceId === dice.id ? 'selected' : ''}`;
+            card.innerHTML = `
+                <div class="dice-preview" style="display:flex;align-items:center;justify-content:center;font-size:40px;background:rgba(255,255,255,0.1);width:80px;height:80px;border-radius:10px;">🎲</div>
+                <div style="font-weight:bold; margin-top:10px;">${dice.name}</div>
+            `;
             card.onclick = () => {
                 this.selectedDiceId = dice.id;
                 this.renderMainMenu();
@@ -81,180 +101,171 @@ export class UI {
 
     onStartGame() {
         this.gs.init(this.selectedModeId, this.selectedDiceId);
-        this.renderLevel();
+        this.renderLevel(true);  // 重新创建 3D 骰子
         this.showScreen('level');
     }
 
-    // --- 关卡界面 ---
-    renderLevel() {
+    renderLevel(recreateDice = false) {
         const level = this.gs.currentLevel;
-        document.getElementById('txt-level-num').innerText = `第 ${this.gs.currentLevelIdx + 1} 关`;
-        document.getElementById('txt-target').innerText = `目标：${level.target} 点`;
-        document.getElementById('txt-throws').innerText = `投掷次数：${this.gs.usedThrows} / ${level.throws}`;
-        document.getElementById('txt-remaining').innerText = `剩余：${level.throws - this.gs.usedThrows}`;
-        document.getElementById('txt-total-score').innerText = `当前累计：${this.gs.totalScoreInLevel}`;
+        document.getElementById('ui-level-num').innerText = `第 ${this.gs.currentLevelIdx + 1} 关`;
+        document.getElementById('ui-target-score').innerText = `目标：${level.target} 点`;
+        document.getElementById('ui-throw-count').innerText = `次数：${this.gs.usedThrows} / ${level.throws}`;
+        document.getElementById('ui-current-points').innerText = `当前累计：${this.gs.totalScoreInLevel}`;
+        document.getElementById('ui-points-nav').innerText = `积分：${this.gs.points}`;
 
-        this.renderHistory();
-        this.renderInventory();
-        this.renderDiceTable();
-    }
+        // 历史记录
+        const historyDiv = document.getElementById('ui-history');
+        historyDiv.innerHTML = this.gs.history.length ? this.gs.history.map(h => `
+            <div class="history-item">
+                <strong>第 ${h.num} 次: ${h.score}分</strong>
+                <div style="color:var(--text-grey); font-size:12px;">[${h.rolls.join(', ')}] ${h.info}</div>
+            </div>
+        `).join('') : '<div style="color:var(--text-muted);text-align:center;margin-top:20px;">暂无记录</div>';
+        historyDiv.scrollTop = historyDiv.scrollHeight;
 
-    renderHistory() {
-        const list = document.getElementById('history-list');
-        list.innerHTML = '';
-        if (this.gs.history.length === 0) {
-            list.innerHTML = '<p class="empty-hint">暂无投掷记录</p>';
-        } else {
-            this.gs.history.forEach(h => {
-                const item = document.createElement('div');
-                item.className = 'history-item';
-                item.style.padding = '8px';
-                item.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
-                item.innerHTML = `<strong>第${h.num}次：${h.score}分</strong> <br><small>结果：[${h.rolls.join(', ')}] ${h.info}</small>`;
-                list.appendChild(item);
+        // 消耗品记录
+        document.getElementById('ui-consume-log').innerHTML = this.gs.consumeHistory.map(log => `
+            <div class="history-item" style="color:var(--primary-gold)">${log}</div>
+        `).join('') || '<div style="color:var(--text-muted);text-align:center;margin-top:20px;">暂无使用</div>';
+
+        // 骰子桌 - 使用 3D 骰子
+        const table = document.getElementById('ui-dice-table');
+
+        // 如果需要重新创建或骰子数量不匹配
+        if (recreateDice || this.dice3DInstances.length !== this.gs.diceInPlay.length) {
+            table.innerHTML = '';
+            this.dice3DInstances = [];
+
+            this.gs.diceInPlay.forEach((d, index) => {
+                const container = document.createElement('div');
+                container.className = 'die-box';
+                container.style.display = 'block';
+
+                const dice3D = new Dice3D(container, d.lastRoll || 1);
+                this.dice3DInstances.push(dice3D);
+
+                table.appendChild(container);
             });
-            list.scrollTop = list.scrollHeight;
+        } else {
+            // 只更新骰子值，不重建
+            this.dice3DInstances.forEach((dice3D, index) => {
+                const value = this.gs.diceInPlay[index].lastRoll || 1;
+                dice3D.setValue(value);
+            });
         }
 
-        const cList = document.getElementById('consume-history');
-        cList.innerHTML = this.gs.consumeHistory.length > 0 ? this.gs.consumeHistory.map(h => `<div style="padding:5px;font-size:12px;">${h}</div>`).join('') : '<p class="empty-hint">暂无使用记录</p>';
-    }
-
-    renderInventory() {
-        const grid = document.getElementById('inventory');
-        grid.innerHTML = '';
+        // 背包
+        const invDiv = document.getElementById('ui-inventory');
+        invDiv.innerHTML = '';
         for (let i = 0; i < 2; i++) {
             const item = this.gs.inventory[i];
             const slot = document.createElement('div');
-            slot.className = 'inv-slot' + (item ? ' active' : '');
+            slot.className = `inv-slot ${item ? 'active' : ''}`;
             if (item) {
-                const icon = this.getConsumableEmoji(item.type);
-                slot.innerHTML = `<div class="item-icon">${icon}</div><div class="item-name">${item.name}</div>`;
+                slot.innerHTML = `
+                    <span style="font-size:30px;">${this.getIcon(item.type)}</span>
+                    <div>
+                        <div style="font-weight:bold">${item.name}</div>
+                        <div style="font-size:11px;color:var(--text-grey)">点击使用</div>
+                    </div>
+                `;
                 slot.onclick = () => this.onUseItem(i);
+            } else {
+                slot.innerHTML = `<span style="color:var(--text-muted)">空槽位</span>`;
             }
-            grid.appendChild(slot);
+            invDiv.appendChild(slot);
         }
     }
 
-    getConsumableEmoji(type) {
-        switch(type) {
-            case 'ROLLBACK': return '🔄';
-            case 'GREEDY': return '🍀';
-            case 'POOR': return '👁️';
-            default: return '❓';
-        }
-    }
+    async onRoll() {
+        if (this.gs.usedThrows >= this.gs.currentLevel.throws) return;
 
-    renderDiceTable() {
-        const table = document.getElementById('dice-table');
-        table.innerHTML = '';
-        this.gs.diceInPlay.forEach((d) => {
-            const die = document.createElement('div');
-            die.className = 'die-card';
-            die.innerText = d.lastRoll || '?';
-            table.appendChild(die);
+        // 获取所有骰子实例的 3D 滚动 promise
+        const rollPromises = this.dice3DInstances.map(dice3D => {
+            // 生成随机目标值用于动画
+            const randomTarget = Math.floor(Math.random() * 6) + 1;
+            return dice3D.roll(randomTarget);
         });
-    }
 
-    onRoll() {
+        // 执行实际投掷逻辑
         const record = this.gs.rollDice();
+
+        // 等待 3D 滚动完成
+        await Promise.all(rollPromises);
+
+        // 更新 3D 骰子显示为实际结果
+        this.dice3DInstances.forEach((dice3D, index) => {
+            dice3D.setValue(this.gs.diceInPlay[index].lastRoll);
+        });
+
+        // 更新界面（历史记录、积分等），但不重建骰子
+        this.renderLevel();
+
+        // 检查过关逻辑
         if (record) {
-            this.renderLevel();
             if (this.gs.isLevelPassed()) {
                 setTimeout(() => {
-                    alert("过关成功！");
-                    this.gs.finishLevel();
-                    this.shopStock = null; // 进商店强制刷新一次货架
-                    this.renderShop();
-                    this.showScreen('shop');
-                }, 300);
+                    this.showResultModal();
+                }, 400);
             } else if (this.gs.isLevelFailed()) {
                 setTimeout(() => {
-                    alert("投掷次数用尽，关卡失败！");
+                    alert("次数用尽，挑战失败！");
                     this.showScreen('main');
-                }, 300);
+                }, 400);
             }
         }
     }
 
     onUseItem(idx) {
-        const item = this.gs.inventory[idx];
-        const result = this.gs.useConsumable(item.type);
-        if (result) {
-            this.gs.inventory.splice(idx, 1);
+        const res = this.gs.useConsumable(idx);
+        if (res && res.success) {
             this.renderLevel();
-            if (item.type === 'ROLLBACK' && this.gs.isLevelPassed()) {
-                setTimeout(() => {
-                    alert("回溯后过关！");
-                    this.gs.finishLevel();
-                    this.shopStock = null;
-                    this.renderShop();
-                    this.showScreen('shop');
-                }, 300);
-            }
         }
     }
 
-    // --- 商店界面 ---
+    // --- 商店逻辑 ---
+
     renderShop() {
-        document.getElementById('txt-points').innerText = `积分：${this.gs.points}`;
-        const nextTarget = CONFIG.LEVELS[this.gs.currentLevelIdx + 1]?.target || '???';
-        document.getElementById('txt-next-target').innerText = `${nextTarget} 点`;
+        document.getElementById('ui-shop-points').innerText = `当前积分：${this.gs.points}`;
+        const nextLevel = CONFIG.LEVELS[this.gs.currentLevelIdx];
+        document.getElementById('ui-next-target').innerText = nextLevel ? `${nextLevel.target} 点` : '胜利！';
 
         if (!this.shopStock) this.refreshStock();
 
-        const shopGrid = document.getElementById('shop-items');
-        shopGrid.innerHTML = '';
+        const grid = document.getElementById('ui-shop-grid');
+        grid.innerHTML = '';
         this.shopStock.forEach((item, idx) => {
             const card = document.createElement('div');
-            card.className = 'shop-item';
-            const visual = this.getItemVisual(item);
+            card.className = 'card shop-card';
             card.innerHTML = `
-                <div class="item-category">
-                    <img src="https://www.figma.com/api/mcp/asset/d957d207-3ae8-4429-98a6-9f7772a2db42" class="small-icon">
-                    ${item.category}
-                </div>
-                <div class="item-visual">${visual}</div>
-                <h3>${item.name}</h3>
-                <p>${item.description}</p>
-                <button class="btn-buy">
-                    <img src="https://www.figma.com/api/mcp/asset/d957d207-3ae8-4429-98a6-9f7772a2db42" class="small-icon">
-                    ${item.price}
-                </button>
+                <div style="font-size:12px;color:var(--text-grey);align-self:flex-start;">[${item.category}]</div>
+                <div class="icon">${this.getIcon(item.type || item.id)}</div>
+                <h3 style="margin:10px 0">${item.name}</h3>
+                <p style="font-size:12px;color:var(--text-grey);flex:1">${item.description}</p>
+                <button class="btn-primary btn-buy">💰 ${item.price}</button>
             `;
             card.onclick = () => this.onBuyItem(item, idx);
-            shopGrid.appendChild(card);
+            grid.appendChild(card);
         });
-    }
-
-    getItemVisual(item) {
-        if (item.category === '骰子升级') {
-            if (item.type === 'WEIGHT') return '⬆️';
-            if (item.type === 'SWAP') return '✨';
-            if (item.type === 'ADD') return '➕';
-        }
-        if (item.category === '消耗品') return this.getConsumableEmoji(item.type);
-        if (item.category === '新骰子') return '🎲';
-        return '❓';
     }
 
     refreshStock() {
         this.shopStock = [];
-        // 2个升级
-        const upgrades = [...CONFIG.UPGRADES].sort(() => Math.random() - 0.5).slice(0, 2);
-        upgrades.forEach(u => this.shopStock.push({ ...u, category: '骰子升级' }));
-        // 1个消耗品
-        const consumable = CONFIG.CONSUMABLES[Math.floor(Math.random() * CONFIG.CONSUMABLES.length)];
-        this.shopStock.push({ ...consumable, category: '消耗品' });
-        // 1个新骰子
-        const extraDice = CONFIG.EXTRA_DICE[Math.floor(Math.random() * CONFIG.EXTRA_DICE.length)];
-        this.shopStock.push({ ...extraDice, category: '新骰子' });
+        // 2 升级
+        const ups = [...CONFIG.UPGRADES].sort(() => Math.random() - 0.5).slice(0, 2);
+        ups.forEach(u => this.shopStock.push({...u, category: '骰子升级'}));
+        // 1 消耗品
+        const con = CONFIG.CONSUMABLES[Math.floor(Math.random() * CONFIG.CONSUMABLES.length)];
+        this.shopStock.push({...con, category: '消耗品'});
+        // 1 新骰子
+        const die = CONFIG.EXTRA_DICE[Math.floor(Math.random() * CONFIG.EXTRA_DICE.length)];
+        this.shopStock.push({...die, category: '新骰子'});
     }
 
     onRefreshShop() {
         if (this.gs.points >= this.gs.mode.refreshCost) {
             this.gs.points -= this.gs.mode.refreshCost;
-            this.refreshStock();
+            this.shopStock = null;
             this.renderShop();
         } else {
             alert("积分不足！");
@@ -268,18 +279,15 @@ export class UI {
         }
 
         if (item.category === '骰子升级') {
-            const diceIdx = prompt(`请选择要升级的骰子编号 (1-${this.gs.diceInPlay.length}):`, "1");
-            const dIdx = parseInt(diceIdx) - 1;
-            if (this.gs.diceInPlay[dIdx]) {
-                const dice = this.gs.diceInPlay[dIdx];
+            const dIdx = prompt(`请选择要升级的骰子 (1-${this.gs.diceInPlay.length}):`, "1");
+            const dice = this.gs.diceInPlay[parseInt(dIdx) - 1];
+            if (dice) {
                 if (item.type === 'WEIGHT') dice.upgradeWeightMax();
-                else if (item.type === 'SWAP') dice.upgradeSideSwap();
-                else if (item.type === 'ADD') dice.upgradeValueAdd();
+                if (item.type === 'SWAP') dice.upgradeSideSwap();
+                if (item.type === 'ADD') dice.upgradeValueAdd();
                 this.gs.points -= item.price;
                 this.shopStock.splice(idx, 1);
                 this.renderShop();
-            } else {
-                alert("无效的骰子编号");
             }
         } else if (item.category === '消耗品') {
             if (this.gs.inventory.length < 2) {
@@ -303,13 +311,61 @@ export class UI {
     }
 
     onNextLevel() {
+        // 增加关卡索引
         this.gs.currentLevelIdx++;
+
         if (this.gs.currentLevelIdx >= CONFIG.LEVELS.length) {
             this.showScreen('victory');
         } else {
-            this.shopStock = null;
-            this.renderLevel();
+            this.renderLevel(true);  // 重新创建 3D 骰子
             this.showScreen('level');
         }
+    }
+
+    getIcon(type) {
+        const icons = {
+            'ROLLBACK': '🔄', 'GREEDY': '🍀', 'POOR': '👁️',
+            'WEIGHT': '📈', 'SWAP': '✨', 'ADD': '➕',
+            'FOUR_SIDED': '🔺', 'SIX_111666': '🎲', 'MULTIPLIER_6': '✖️', 'BLANK_6': '⚪'
+        };
+        return icons[type] || '🎁';
+    }
+
+    // --- 结算弹窗逻辑 ---
+
+    showResultModal() {
+        // 先结算关卡获取数据
+        const result = this.gs.finishLevel();
+        this.shopStock = null;
+
+        // 填充弹窗数据 - creditsgot: 本关卡获得的积分
+        document.getElementById('creditsgot-value').textContent = `+${result.gained}`;
+
+        // 填充弹窗数据 - creditsowned: 结算后的总积分
+        document.getElementById('creditsowned-value').textContent = this.gs.points;
+
+        // 显示弹窗（带动画）
+        const modal = document.getElementById('result-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('visible');
+
+        // 动画完成后允许点击（500ms 后）
+        setTimeout(() => {
+            modal.classList.add('clickable');
+        }, 500);
+    }
+
+    onResultContinue() {
+        // 隐藏弹窗
+        const modal = document.getElementById('result-modal');
+        modal.classList.remove('visible');
+        modal.classList.remove('clickable');
+
+        // 延迟后进入商店界面
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            this.renderShop();
+            this.showScreen('shop');
+        }, 300);
     }
 }

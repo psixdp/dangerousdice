@@ -1,5 +1,5 @@
 import { CONFIG } from './config.js';
-import { Dice, calculateScore } from './dice.js';
+import { Dice, calculateFinalScore } from './dice.js';
 
 export class GameState {
     constructor() {
@@ -10,14 +10,14 @@ export class GameState {
         this.mode = null;
         this.currentLevelIdx = 0;
         this.points = 0;
-        this.diceInPlay = []; // 包含 Dice 实例
-        this.inventory = []; // 消耗品对象
+        this.diceInPlay = []; 
+        this.inventory = []; // 背包上限 2
         this.totalScoreInLevel = 0;
         this.usedThrows = 0;
-        this.history = []; // 每关投掷历史
+        this.history = []; 
         this.consumeHistory = [];
         
-        // 状态效果
+        // 状态效果 (对下一次生效)
         this.nextRollEffect = null; // 'GREEDY'
         this.nextScoreEffect = null; // 'POOR'
     }
@@ -35,30 +35,33 @@ export class GameState {
         return CONFIG.LEVELS[this.currentLevelIdx];
     }
 
-    // 执行一次投掷逻辑，返回结果对象
+    /**
+     * 核心投掷逻辑 (内部)
+     */
     _performRoll() {
         const rolls = this.diceInPlay.map(d => d.roll());
         const diceTypes = this.diceInPlay.map(d => d.type);
 
-        let finalRolls = [...rolls];
-        let info = "";
+        let processedRolls = [...rolls];
+        let infoLines = [];
 
         // 3.2 贪心祝福：最大点数面额外 +1
         if (this.nextRollEffect === 'GREEDY') {
-            const maxVal = Math.max(...finalRolls);
-            finalRolls = finalRolls.map(v => v === maxVal ? v + 1 : v);
-            info += "贪心生效 (+1) ";
+            const maxVal = Math.max(...processedRolls);
+            processedRolls = processedRolls.map(v => v === maxVal ? v + 1 : v);
+            infoLines.push("贪心祝福生效: 最大面+1");
             this.nextRollEffect = null;
         }
 
         let score = 0;
         // 3.3 穷鬼祝福：忽略一颗最小值
         if (this.nextScoreEffect === 'POOR') {
-            const minVal = Math.min(...finalRolls);
+            const minVal = Math.min(...processedRolls);
             let ignored = false;
             const filteredRolls = [];
             const filteredTypes = [];
-            finalRolls.forEach((v, i) => {
+            
+            processedRolls.forEach((v, i) => {
                 if (!ignored && v === minVal) {
                     ignored = true;
                 } else {
@@ -66,14 +69,20 @@ export class GameState {
                     filteredTypes.push(diceTypes[i]);
                 }
             });
-            score = calculateScore(filteredRolls, filteredTypes);
-            info += "穷鬼生效 (略最小) ";
+            
+            score = calculateFinalScore(filteredRolls, filteredTypes);
+            infoLines.push("穷鬼祝福生效: 忽略一颗最小值");
             this.nextScoreEffect = null;
         } else {
-            score = calculateScore(finalRolls, diceTypes);
+            score = calculateFinalScore(processedRolls, diceTypes);
         }
 
-        return { rolls: finalRolls, score, info };
+        return { 
+            originalRolls: rolls, 
+            processedRolls, 
+            score, 
+            info: infoLines.join(", ") 
+        };
     }
 
     rollDice() {
@@ -86,7 +95,7 @@ export class GameState {
         
         const rollRecord = {
             num: this.usedThrows,
-            rolls: result.rolls,
+            rolls: result.processedRolls,
             score: result.score,
             info: result.info
         };
@@ -95,38 +104,46 @@ export class GameState {
         return rollRecord;
     }
 
-    useConsumable(itemType) {
-        if (itemType === 'ROLLBACK') {
-            if (this.history.length === 0) return false;
+    useConsumable(itemIndex) {
+        const item = this.inventory[itemIndex];
+        if (!item) return null;
+
+        if (item.type === 'ROLLBACK') {
+            if (this.history.length === 0) return { success: false, msg: "无可回溯的投掷" };
             
-            // 撤销最近一次结果
+            // 撤销最近一次结果 (不扣投掷次数)
             const lastRecord = this.history.pop();
             this.totalScoreInLevel -= lastRecord.score;
             
-            // 重新投掷（不扣次数，即用本次结果替代上一次结果）
+            // 重新投掷
             const result = this._performRoll();
             this.totalScoreInLevel += result.score;
             
             const rollRecord = {
                 num: lastRecord.num,
-                rolls: result.rolls,
+                rolls: result.processedRolls,
                 score: result.score,
                 info: (result.info + " (回溯重投)").trim()
             };
             this.history.push(rollRecord);
             
-            this.consumeHistory.push("使用了回溯祝福");
-            return { type: 'ROLLBACK', record: rollRecord };
-        } else if (itemType === 'GREEDY') {
+            this.consumeHistory.push(`使用了回溯祝福 (替换第 ${lastRecord.num} 次)`);
+            this.inventory.splice(itemIndex, 1);
+            return { success: true, type: 'ROLLBACK', record: rollRecord };
+
+        } else if (item.type === 'GREEDY') {
             this.nextRollEffect = 'GREEDY';
-            this.consumeHistory.push("使用了贪心祝福");
-            return true;
-        } else if (itemType === 'POOR') {
+            this.consumeHistory.push("使用了贪心祝福 (下次投掷生效)");
+            this.inventory.splice(itemIndex, 1);
+            return { success: true, type: 'GREEDY' };
+
+        } else if (item.type === 'POOR') {
             this.nextScoreEffect = 'POOR';
-            this.consumeHistory.push("使用了穷鬼祝福");
-            return true;
+            this.consumeHistory.push("使用了穷鬼祝福 (下次计分生效)");
+            this.inventory.splice(itemIndex, 1);
+            return { success: true, type: 'POOR' };
         }
-        return false;
+        return { success: false, msg: "未知消耗品" };
     }
 
     isLevelPassed() {
@@ -137,21 +154,29 @@ export class GameState {
         return !this.isLevelPassed() && this.usedThrows >= this.currentLevel.throws;
     }
 
+    /**
+     * 结算关卡 (遵循 game.md)
+     */
     finishLevel() {
         const remThrows = this.currentLevel.throws - this.usedThrows;
+        
+        // 1. 计算本关积分
         const levelBonus = this.mode.calcScore(remThrows, this.usedThrows);
         
-        // 利息：20%，最大 5
+        // 2. 计算利息: 持有总积分的 20%，向下取整，最大 5
         const interest = Math.min(this.mode.maxInterest, Math.floor(this.points * this.mode.interestRate));
         
-        this.points += levelBonus + interest;
+        const totalGained = levelBonus + interest;
+        this.points += totalGained;
         
-        // 重置关卡状态
+        // 重置本关临时状态
         this.totalScoreInLevel = 0;
         this.usedThrows = 0;
         this.history = [];
         this.consumeHistory = [];
         this.nextRollEffect = null;
         this.nextScoreEffect = null;
+
+        return { gained: totalGained, bonus: levelBonus, interest: interest };
     }
 }
