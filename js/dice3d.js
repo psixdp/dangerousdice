@@ -1,9 +1,10 @@
 // 3D 骰子类 - 使用 Three.js 实现真实的 3D 骰子滚动效果
 
 export class Dice3D {
-    constructor(container, value) {
+    constructor(container, value, index = 0) {
         this.container = container;
         this.value = value;
+        this.index = index;
         this.isRolling = false;
         this.init();
     }
@@ -12,9 +13,9 @@ export class Dice3D {
         // 创建场景
         this.scene = new THREE.Scene();
 
-        // 创建相机
+        // 创建相机 - 扩大视野以支持骰子移动
         this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-        this.camera.position.z = 4.5;
+        this.camera.position.z = 5.5;
 
         // 创建渲染器
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -122,6 +123,33 @@ export class Dice3D {
         this.render();
     }
 
+    // Box-Muller 变换生成正态分布随机数
+    normalDistribution(mean = 0, stdDev = 1) {
+        let u1 = Math.random();
+        let u2 = Math.random();
+        while (u1 === 0) u1 = Math.random();
+        const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        return mean + z0 * stdDev;
+    }
+
+    // 缓动函数 - 惯性效果
+    easeOutQuad(t) {
+        return t * (2 - t);
+    }
+
+    // 缓动函数 - 弹跳效果
+    easeOutBounce(t) {
+        if (t < 1 / 2.75) {
+            return 7.5625 * t * t;
+        } else if (t < 2 / 2.75) {
+            return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
+        } else if (t < 2.5 / 2.75) {
+            return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
+        } else {
+            return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
+        }
+    }
+
     async roll(targetValue) {
         if (this.isRolling) return Promise.resolve();
         this.isRolling = true;
@@ -129,21 +157,64 @@ export class Dice3D {
         const startTime = Date.now();
         const duration = 800;
 
-        // 滚动动画
+        // 起始位置 - 基于骰子索引的抛出方向，确保每个骰子抛出方向不同
+        // 使用基于索引的固定偏移，避免随机性导致的混乱
+        const offsetAngle = this.index * 0.8;  // 每个骰子间隔约 0.8 弧度
+        const startAngle = offsetAngle + Math.random() * 0.3 - 0.15;  // 固定方向加轻微随机
+        const startRadius = 2.2;  // 抛出距离
+        const startPos = {
+            x: Math.cos(startAngle) * startRadius,
+            y: Math.sin(startAngle) * startRadius * 0.4 + 0.6,  // 稍微向上
+            z: 0
+        };
+
+        // 目标位置 - 正态分布在中心 (0, 0) 附近
+        const targetPos = {
+            x: this.normalDistribution(0, 0.3),  // 水平偏移，标准差 0.3
+            y: this.normalDistribution(0, 0.25), // 垂直偏移，标准差 0.25
+            z: 0
+        };
+
+        // 初始旋转速度
+        let rotSpeed = {
+            x: 0.15 + Math.random() * 0.1,
+            y: 0.2 + Math.random() * 0.15,
+            z: 0.1 + Math.random() * 0.08
+        };
+
+        // 设置起始位置
+        this.cube.position.set(startPos.x, startPos.y, startPos.z);
+
         return new Promise(resolve => {
             const animate = () => {
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
                 if (progress < 1) {
-                    // 随机旋转模拟滚动
-                    this.cube.rotation.x += 0.15 + Math.random() * 0.1;
-                    this.cube.rotation.y += 0.2 + Math.random() * 0.15;
-                    this.cube.rotation.z += 0.1 + Math.random() * 0.08;
+                    // 位置动画 - 使用 easeOutQuad 产生惯性效果
+                    const easedProgress = this.easeOutQuad(progress);
+
+                    this.cube.position.x = startPos.x + (targetPos.x - startPos.x) * easedProgress;
+                    this.cube.position.y = startPos.y + (targetPos.y - startPos.y) * easedProgress;
+                    this.cube.position.z = startPos.z;
+
+                    // 添加高度弹跳效果
+                    if (progress < 0.7) {
+                        const bounceHeight = 1.5 * this.easeOutBounce(progress / 0.7);
+                        this.cube.position.y += bounceHeight;
+                    }
+
+                    // 旋转动画 - 速度随时间减慢（惯性）
+                    const speedFactor = 1 - progress * 0.8;
+                    this.cube.rotation.x += rotSpeed.x * speedFactor;
+                    this.cube.rotation.y += rotSpeed.y * speedFactor;
+                    this.cube.rotation.z += rotSpeed.z * speedFactor;
+
                     this.render();
                     requestAnimationFrame(animate);
                 } else {
-                    // 完成滚动，旋转到目标面
+                    // 完成滚动
+                    this.cube.position.set(targetPos.x, targetPos.y, targetPos.z);
                     this.isRolling = false;
                     this.setValue(targetValue);
                     resolve();

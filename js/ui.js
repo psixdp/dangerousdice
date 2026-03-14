@@ -136,16 +136,28 @@ export class UI {
             table.innerHTML = '';
             this.dice3DInstances = [];
 
-            this.gs.diceInPlay.forEach((d, index) => {
-                const container = document.createElement('div');
-                container.className = 'die-box';
-                container.style.display = 'block';
+            // 创建统一的骰子容器，水平排列居中
+            const diceContainer = document.createElement('div');
+            diceContainer.className = 'die-box';
+            diceContainer.style.display = 'flex';
+            diceContainer.style.alignItems = 'center';
+            diceContainer.style.justifyContent = 'center';
+            diceContainer.style.gap = '40px';
 
-                const dice3D = new Dice3D(container, d.lastRoll || 1);
+            this.gs.diceInPlay.forEach((d, index) => {
+                // 每个骰子的单独容器
+                const dieWrapper = document.createElement('div');
+                dieWrapper.style.position = 'relative';
+                dieWrapper.style.width = '110px';
+                dieWrapper.style.height = '110px';
+
+                const dice3D = new Dice3D(dieWrapper, d.lastRoll || 1, index);
                 this.dice3DInstances.push(dice3D);
 
-                table.appendChild(container);
+                diceContainer.appendChild(dieWrapper);
             });
+
+            table.appendChild(diceContainer);
         } else {
             // 只更新骰子值，不重建
             this.dice3DInstances.forEach((dice3D, index) => {
@@ -214,45 +226,6 @@ export class UI {
                 }, 400);
             }
         }
-        this.isProcessing = true;
-        console.log('isProcessing set to true');
-
-        const record = this.gs.rollDice();
-        console.log('rollDice() result:', record ? 'success' : 'null');
-
-        if (record) {
-            console.log('Before renderLevel() call');
-            this.renderLevel();
-            console.log('After renderLevel() call');
-
-            if (this.gs.isLevelPassed()) {
-                console.log('Level PASSED!');
-                alert("过关成功！");
-                this.gs.finishLevel();
-                this.shopStock = null;
-                this.renderShop();
-                this.showScreen('shop');
-            } else if (this.gs.isLevelFailed()) {
-                console.log('Level FAILED!');
-                alert("投掷次数用尽，关卡失败！");
-                this.showScreen('main');
-                this.renderMainMenu();
-            } else {
-                console.log('Normal roll - game not finished');
-                // 此时 isProcessing 是 true，按钮保持禁用，等待下次点击
-            }
-
-            // 在所有逻辑完成后，重置 isProcessing 并重新渲染按钮状态
-            this.isProcessing = false;
-            console.log('isProcessing set to false (after all logic)');
-            this.renderLevel(); // 重新渲染以更新按钮状态
-        } else {
-            console.log('No record from rollDice(), isProcessing = false');
-            this.isProcessing = false;
-        }
-
-        console.log('=== onRoll END ===');
-        console.log('Final: isProcessing =', this.isProcessing);
     }
 
     onUseItem(idx) {
